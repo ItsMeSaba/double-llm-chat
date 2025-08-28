@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./ChatPage.css";
+import "./ChatPage.scss";
 
 interface Message {
   id: string;

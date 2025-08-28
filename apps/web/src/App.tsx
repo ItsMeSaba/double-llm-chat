@@ -7,7 +7,7 @@ import {
 import { LoginPage } from "./pages/LoginPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DualChatPage } from "./pages/DualChatPage";
-import "./App.css";
+import "./App.scss";
 
 function App() {
   return (

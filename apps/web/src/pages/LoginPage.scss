@@ -90,7 +90,9 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   margin-bottom: 24px;
 }
 
@@ -133,12 +135,12 @@
     padding: 24px;
     margin: 16px;
   }
-  
+
   .login-card h1 {
     font-size: 24px;
   }
-  
+
   .subtitle {
     font-size: 14px;
   }
-} 
+}

@@ -155,7 +155,9 @@
 }
 
 @keyframes typing {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.8);
     opacity: 0.5;
   }
@@ -206,7 +208,9 @@
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
   min-width: 120px;
   white-space: nowrap;
 }
@@ -247,7 +251,7 @@
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .chat-window {
     min-height: 300px;
   }
@@ -257,24 +261,24 @@
   .dual-chat-header {
     padding: 12px 16px;
   }
-  
+
   .dual-chat-header h1 {
     font-size: 20px;
   }
-  
+
   .chat-windows-container {
     padding: 12px;
     gap: 8px;
   }
-  
+
   .message-input-form {
     padding: 16px;
   }
-  
+
   .message-content {
     max-width: 90%;
   }
-  
+
   .send-btn {
     min-width: 100px;
     padding: 12px 20px;
@@ -285,17 +289,17 @@
   .dual-chat-header h1 {
     font-size: 18px;
   }
-  
+
   .chat-window .chat-header h2 {
     font-size: 16px;
   }
-  
+
   .messages-container {
     padding: 16px;
   }
-  
+
   .message-input {
     padding: 12px 16px;
     font-size: 14px;
   }
-} 
+}

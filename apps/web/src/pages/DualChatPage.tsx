@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./DualChatPage.css";
+import "./DualChatPage.scss";
 
 interface Message {
   id: string;
