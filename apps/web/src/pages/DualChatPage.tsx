@@ -96,16 +96,25 @@ export function DualChatPage() {
 
       data.responses.forEach((response) => {
         const aiMessage: Message = {
-          id: Date.now().toString() + Math.random(),
+          id: `response-${response.messageId}-${response.model}`,
           text: response.response,
           sender: response.model as "gpt-4o-mini" | "gemini-1.5-flash",
           timestamp: new Date(),
           messageId: response.messageId,
         };
 
-        setMessages((prev) => [...prev, aiMessage]);
+        // Check if this response already exists to prevent duplicates
+        setMessages((prev) => {
+          if (isDuplicateMessage(aiMessage, prev)) {
+            console.log("Response already exists, skipping duplicate");
+            return prev;
+          }
+
+          return [...prev, aiMessage];
+        });
       });
 
+      // Clear typing indicators
       setIsTypingGPT(false);
       setIsTypingGemini(false);
     });
@@ -127,25 +136,40 @@ export function DualChatPage() {
 
     if (!inputText.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputText.trim(),
-      sender: "user",
-      timestamp: new Date(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
+    const messageText = inputText.trim();
     setInputText("");
 
+    // Set typing indicators for both models
     setIsTypingGPT(true);
     setIsTypingGemini(true);
 
     try {
-      socketService.sendMessage(inputText.trim(), (data) => {
+      // Send message via Socket.IO and wait for confirmation
+      socketService.sendMessage(messageText, (data) => {
         console.log("Message received:", data);
+
+        // Add the user message to state only after server confirmation
+        const userMessage: Message = {
+          id: data.messageId.toString(),
+          text: messageText,
+          sender: "user",
+          timestamp: new Date(data.timestamp),
+          messageId: data.messageId,
+        };
+
+        // Check if this message already exists to prevent duplicates
+        setMessages((prev) => {
+          if (isDuplicateMessage(userMessage, prev)) {
+            console.log("User message already exists, skipping duplicate");
+            return prev;
+          }
+
+          return [...prev, userMessage];
+        });
       });
     } catch (error) {
       console.error("Error sending message:", error);
+      // Clear typing indicators on error
       setIsTypingGPT(false);
       setIsTypingGemini(false);
     }
@@ -172,6 +196,37 @@ export function DualChatPage() {
     return messages.filter(
       (message) => message.sender === chatType || message.sender === "user"
     );
+  };
+
+  // Utility function to check for duplicate messages
+  const isDuplicateMessage = (
+    newMessage: Message,
+    existingMessages: Message[]
+  ): boolean => {
+    return existingMessages.some((existing) => {
+      // Check by messageId first (most reliable)
+      if (
+        newMessage.messageId &&
+        existing.messageId &&
+        newMessage.messageId === existing.messageId
+      ) {
+        return true;
+      }
+
+      // Check by content and sender (fallback)
+      if (
+        newMessage.text === existing.text &&
+        newMessage.sender === existing.sender
+      ) {
+        // Only consider it duplicate if sent within 5 seconds
+        const timeDiff = Math.abs(
+          newMessage.timestamp.getTime() - existing.timestamp.getTime()
+        );
+        return timeDiff < 5000;
+      }
+
+      return false;
+    });
   };
 
   const renderChatWindow = (
