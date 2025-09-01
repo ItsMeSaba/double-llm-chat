@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../base/context/AuthProvider";
 import "./ChatPage.scss";
 
 interface Message {
@@ -20,8 +21,10 @@ export function ChatPage() {
   ]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -61,9 +64,17 @@ export function ChatPage() {
     }, 1000);
   };
 
-  const handleLogout = () => {
-    // Clear any stored auth data here
-    navigate("/");
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setIsLoggingOut(false);
+      navigate("/");
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -74,8 +85,12 @@ export function ChatPage() {
     <div className="chat-container">
       <div className="chat-header">
         <h1>Chat Room</h1>
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
+        <button
+          onClick={handleLogout}
+          className="logout-btn"
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? "Logging out..." : "Logout"}
         </button>
       </div>
 

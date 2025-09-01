@@ -4,9 +4,10 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { LoginPage } from "./pages/LoginPage";
+import { LoginPage } from "./pages/Login/LoginPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DualChatPage } from "./pages/DualChatPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./App.scss";
 
 function App() {
@@ -15,8 +16,25 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route path="/dual-chat" element={<DualChatPage />} />
+
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/dual-chat"
+            element={
+              <ProtectedRoute>
+                <DualChatPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
