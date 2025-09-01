@@ -1,30 +1,44 @@
 import express from "express";
-import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+import { createServer } from "http";
 import { setupRoutes } from "./routes";
 import { errorHandler } from "./middleware/errorHandler";
 import { notFoundHandler } from "./middleware/notFoundHandler";
+import { authMiddleware } from "./middleware/auth";
+import { corsOptions } from "./config/cors";
+import cors from "cors";
+import { SocketService } from "./services/socketService";
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+const server = createServer(app);
 const PORT = process.env.PORT || 3000;
 
 // Initialize middleware
 function initializeMiddleware(): void {
   app.use(helmet());
-  app.use(cors());
+  app.use(cors(corsOptions));
   app.use(morgan("combined"));
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(cookieParser());
+  app.use(authMiddleware);
 }
 
 // Initialize routes
 function initializeRoutes(): void {
   setupRoutes(app);
+}
+
+// Initialize Socket.IO
+function initializeSocketIO(): void {
+  new SocketService(server);
+  console.log("🔌 Socket.IO service initialized");
 }
 
 // Initialize error handling
@@ -35,7 +49,7 @@ function initializeErrorHandling(): void {
 
 // Start the server
 function startServer(): void {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV || "development"}`);
   });
@@ -45,6 +59,7 @@ function startServer(): void {
 function bootstrap(): void {
   initializeMiddleware();
   initializeRoutes();
+  initializeSocketIO();
   initializeErrorHandling();
   startServer();
 }

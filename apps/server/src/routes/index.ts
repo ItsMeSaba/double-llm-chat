@@ -1,15 +1,13 @@
 import { Express } from "express";
-import { healthRoutes } from "./healthRoutes";
 import { apiRoutes } from "./apiRoutes";
+import { authRoutes } from "./auth";
+import { chatRoutes } from "./chat";
 
 export function setupRoutes(app: Express): void {
-  // Health check route
-  app.use("/health", healthRoutes);
-
-  // API routes
   app.use("/api", apiRoutes);
+  app.use("/api/auth", authRoutes);
+  app.use("/api/chat", chatRoutes);
 
-  // Root route
   app.get("/", (_req, res) => {
     res.json({
       message: "Welcome to Supernova Task API",
