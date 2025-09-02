@@ -9,10 +9,7 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
-    "test": "jest",
-    "test-cors": "node test-cors.js",
-    "test-cookies": "node test-cookies.js",
-    "test-logout": "node test-logout.js"
+    "test": "jest"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
