@@ -9,8 +9,9 @@ import {
 import { submitFeedback } from "../../services/feedbackService";
 import { ChatWindow } from "./components/ChatWindow";
 import "./styles.scss";
+import { isDuplicateMessage } from "./helpers/isDuplicateMessage";
 
-interface Message {
+export interface Message {
   id: string;
   text: string;
   sender: "user" | "gpt-4o-mini" | "gemini-1.5-flash";
@@ -224,34 +225,6 @@ export function DualChatPage() {
     return messages.filter(
       (message) => message.sender === chatType || message.sender === "user"
     );
-  };
-
-  // Utility function to check for duplicate messages
-  const isDuplicateMessage = (
-    newMessage: Message,
-    existingMessages: Message[]
-  ): boolean => {
-    return existingMessages.some((existing) => {
-      if (
-        newMessage.messageId &&
-        existing.messageId &&
-        newMessage.messageId === existing.messageId &&
-        newMessage.sender === existing.sender
-      ) {
-        return true;
-      }
-
-      // Check by content and sender (fallback)
-      if (newMessage.text === existing.text) {
-        // Only consider it duplicate if sent within 5 seconds
-        const timeDiff = Math.abs(
-          newMessage.timestamp.getTime() - existing.timestamp.getTime()
-        );
-        return timeDiff < 5000;
-      }
-
-      return false;
-    });
   };
 
   return (
