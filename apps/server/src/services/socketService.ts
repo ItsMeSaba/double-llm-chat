@@ -149,7 +149,7 @@ export class SocketService {
   ) {
     try {
       // Simulate LLM processing (replace with actual LLM API calls)
-      const llmResponses = await this.callLLMs(userMessage);
+      const llmResponses = await this.callLLMs(userMessage, messageId);
 
       // Save LLM responses to database
       for (const response of llmResponses) {
@@ -160,7 +160,6 @@ export class SocketService {
         );
       }
 
-      console.log("llmResponses", llmResponses);
       socket.emit("llm_responses", {
         messageId,
         responses: llmResponses,
@@ -171,9 +170,12 @@ export class SocketService {
     }
   }
 
-  private async callLLMs(userMessage: string): Promise<LLMResponse[]> {
+  private async callLLMs(
+    userMessage: string,
+    messageId: number
+  ): Promise<LLMResponse[]> {
     // Call actual LLM APIs instead of mock responses
-    return await this.llmService.callAllLLMs(userMessage);
+    return await this.llmService.callAllLLMs(userMessage, messageId);
   }
 
   private async saveLLMResponse(
@@ -201,4 +203,3 @@ export class SocketService {
     this.io.emit(event, data);
   }
 }
-

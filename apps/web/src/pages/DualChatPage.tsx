@@ -82,12 +82,12 @@ export function DualChatPage() {
     ref.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Handle feedback submission
   const handleFeedback = async (
     messageId: number,
     winnerModel: "gpt-4o-mini" | "gemini-1.5-flash"
   ) => {
     try {
+      console.log("messageId, winnerModel", messageId, winnerModel);
       await submitFeedback({ messageId, winnerModel });
 
       // Update local feedback state
@@ -129,9 +129,8 @@ export function DualChatPage() {
     socketService.connect();
 
     socketService.onLLMResponses((data) => {
-      console.log("LLM responses received:", data);
-
       data.responses.forEach((response) => {
+        console.log("socketService.onLLMResponses", response);
         const aiMessage: Message = {
           id: `response-${response.messageId}-${response.model}`,
           text: response.response,
@@ -196,6 +195,7 @@ export function DualChatPage() {
 
         // Check if this message already exists to prevent duplicates
         setMessages((prev) => {
+          console.log("userMessage, prev", userMessage, prev);
           if (isDuplicateMessage(userMessage, prev)) {
             console.log("User message already exists, skipping duplicate");
             return prev;
@@ -241,20 +241,19 @@ export function DualChatPage() {
     existingMessages: Message[]
   ): boolean => {
     return existingMessages.some((existing) => {
-      // Check by messageId first (most reliable)
       if (
         newMessage.messageId &&
         existing.messageId &&
-        newMessage.messageId === existing.messageId
+        newMessage.messageId === existing.messageId &&
+        newMessage.sender === existing.sender
       ) {
+        console.log("FIRST STATEMENT", newMessage, existing);
+        console.log("RETURNING FIRST STATEMENT");
         return true;
       }
 
       // Check by content and sender (fallback)
-      if (
-        newMessage.text === existing.text &&
-        newMessage.sender === existing.sender
-      ) {
+      if (newMessage.text === existing.text) {
         // Only consider it duplicate if sent within 5 seconds
         const timeDiff = Math.abs(
           newMessage.timestamp.getTime() - existing.timestamp.getTime()
@@ -293,8 +292,6 @@ export function DualChatPage() {
               const isLiked =
                 feedbackMap.get(message?.messageId || -1) === chatType;
 
-              console.log("isliked", Array.from(feedbackMap.entries()));
-
               return (
                 <div
                   key={message.id}
@@ -305,7 +302,9 @@ export function DualChatPage() {
                     <span className="message-time">
                       {formatTime(message.timestamp)}
                     </span>
-                    {message.sender !== "user" && message.messageId && (
+
+                    {/* {console.log("message HERE BROSKI", message)} */}
+                    {message.sender !== "user" && (
                       <button
                         className={`like-btn ${isLiked && "liked"}`}
                         onClick={() =>

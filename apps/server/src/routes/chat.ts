@@ -160,15 +160,16 @@ router.post("/feedback", async (req: Request, res: Response) => {
       return res.status(401).json({ error: "User not authenticated" });
     }
 
-    if (!messageId || !winnerModel) {
-      return res.status(400).json({ 
-        error: "Message ID and winner model are required" 
+    if (typeof messageId !== "number" || !winnerModel) {
+      return res.status(400).json({
+        error: "Message ID and winner model are required",
       });
     }
 
     if (!["gpt-4o-mini", "gemini-1.5-flash"].includes(winnerModel)) {
-      return res.status(400).json({ 
-        error: "Invalid winner model. Must be 'gpt-4o-mini' or 'gemini-1.5-flash'" 
+      return res.status(400).json({
+        error:
+          "Invalid winner model. Must be 'gpt-4o-mini' or 'gemini-1.5-flash'",
       });
     }
 
@@ -183,9 +184,9 @@ router.post("/feedback", async (req: Request, res: Response) => {
       // Update existing feedback
       await db
         .update(feedback)
-        .set({ 
+        .set({
           winnerModel,
-          createdAt: new Date()
+          createdAt: new Date(),
         })
         .where(eq(feedback.messageId, messageId));
     } else {
@@ -239,14 +240,18 @@ router.get("/statistics", async (req: Request, res: Response) => {
       .groupBy(feedback.winnerModel);
 
     // Format the data for the pie chart
-    const chartData = feedbackStats.map(stat => ({
-      name: stat.winnerModel === 'gpt-4o-mini' ? 'GPT-4o Mini' : 'Gemini 1.5 Flash',
+    const chartData = feedbackStats.map((stat) => ({
+      name:
+        stat.winnerModel === "gpt-4o-mini" ? "GPT-4o Mini" : "Gemini 1.5 Flash",
       value: stat.count,
-      model: stat.winnerModel
+      model: stat.winnerModel,
     }));
 
     // Calculate total feedback count
-    const totalFeedback = feedbackStats.reduce((sum, stat) => sum + stat.count, 0);
+    const totalFeedback = feedbackStats.reduce(
+      (sum, stat) => sum + stat.count,
+      0
+    );
 
     return res.status(200).json({
       success: true,
@@ -254,9 +259,14 @@ router.get("/statistics", async (req: Request, res: Response) => {
         chartData,
         totalFeedback,
         summary: {
-          gptLikes: feedbackStats.find(stat => stat.winnerModel === 'gpt-4o-mini')?.count || 0,
-          geminiLikes: feedbackStats.find(stat => stat.winnerModel === 'gemini-1.5-flash')?.count || 0,
-        }
+          gptLikes:
+            feedbackStats.find((stat) => stat.winnerModel === "gpt-4o-mini")
+              ?.count || 0,
+          geminiLikes:
+            feedbackStats.find(
+              (stat) => stat.winnerModel === "gemini-1.5-flash"
+            )?.count || 0,
+        },
       },
     });
   } catch (error) {

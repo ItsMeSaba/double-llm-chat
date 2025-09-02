@@ -56,7 +56,10 @@ export class LLMService {
     }
   }
 
-  async callAllLLMs(userMessage: string): Promise<LLMResponse[]> {
+  async callAllLLMs(
+    userMessage: string,
+    messageId: number
+  ): Promise<LLMResponse[]> {
     const responses: LLMResponse[] = [];
 
     try {
@@ -66,12 +69,16 @@ export class LLMService {
         this.callGeminiFlash(userMessage),
       ]);
 
+      console.log("gptResponse", gptResponse);
+      console.log("geminiResponse", geminiResponse);
+      console.log("messageId", messageId);
+
       // Add GPT-4o-mini response
       if (gptResponse.status === "fulfilled") {
         responses.push({
           model: "gpt-4o-mini",
           response: gptResponse.value,
-          messageId: 0, // Will be set by caller
+          messageId, // Will be set by caller
         });
       } else {
         console.error("GPT-4o-mini failed:", gptResponse.reason);
@@ -79,7 +86,7 @@ export class LLMService {
           model: "gpt-4o-mini",
           response:
             "Sorry, I encountered an error while processing your request.",
-          messageId: 0,
+          messageId,
         });
       }
 
@@ -88,7 +95,7 @@ export class LLMService {
         responses.push({
           model: "gemini-1.5-flash",
           response: geminiResponse.value,
-          messageId: 0,
+          messageId,
         });
       } else {
         console.error("Gemini-1.5-flash failed:", geminiResponse.reason);
@@ -96,7 +103,7 @@ export class LLMService {
           model: "gemini-1.5-flash",
           response:
             "Sorry, I encountered an error while processing your request.",
-          messageId: 0,
+          messageId,
         });
       }
 
