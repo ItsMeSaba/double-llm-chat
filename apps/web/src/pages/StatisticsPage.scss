@@ -2,7 +2,7 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem;
-  
+
   .statistics-container {
     max-width: 1200px;
     margin: 0 auto;
@@ -10,7 +10,7 @@
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     padding: 2rem;
-    
+
     h1 {
       color: #333;
       text-align: center;
@@ -18,28 +18,214 @@
       font-size: 2.5rem;
       font-weight: 600;
     }
-    
+
+    .loading-container,
+    .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 1rem;
+      }
+
+      p {
+        color: #666;
+        font-size: 1.1rem;
+        margin: 0;
+      }
+
+      .error-message {
+        color: #e74c3c;
+        margin-bottom: 1rem;
+      }
+
+      .retry-button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.2s ease;
+
+        &:hover {
+          background: #5a6fd8;
+        }
+      }
+    }
+
     .statistics-content {
       display: grid;
       gap: 2rem;
-      
-      .statistics-section {
+
+      .chart-section {
         background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
+        padding: 2rem;
+        border-radius: 12px;
         border-left: 4px solid #667eea;
-        
+
+        h2 {
+          color: #495057;
+          margin-bottom: 1.5rem;
+          font-size: 1.8rem;
+          font-weight: 500;
+          text-align: center;
+        }
+
+        .chart-container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 400px;
+        }
+      }
+
+      .summary-section {
+        h2 {
+          color: #495057;
+          margin-bottom: 1.5rem;
+          font-size: 1.8rem;
+          font-weight: 500;
+          text-align: center;
+        }
+
+        .summary-cards {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 1.5rem;
+
+          .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition:
+              transform 0.2s ease,
+              box-shadow 0.2s ease;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            }
+
+            h3 {
+              color: #495057;
+              margin-bottom: 1rem;
+              font-size: 1.2rem;
+              font-weight: 500;
+            }
+
+            .count {
+              font-size: 2.5rem;
+              font-weight: 700;
+              margin-bottom: 0.5rem;
+            }
+
+            .label {
+              color: #6c757d;
+              font-size: 0.9rem;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+
+            &.gpt-card {
+              border-top: 4px solid #667eea;
+
+              .count {
+                color: #667eea;
+              }
+            }
+
+            &.gemini-card {
+              border-top: 4px solid #764ba2;
+
+              .count {
+                color: #764ba2;
+              }
+            }
+
+            &.total-card {
+              border-top: 4px solid #28a745;
+
+              .count {
+                color: #28a745;
+              }
+            }
+          }
+        }
+      }
+
+      .no-data-section {
+        background: #f8f9fa;
+        padding: 2rem;
+        border-radius: 12px;
+        border-left: 4px solid #ffc107;
+        text-align: center;
+
         h2 {
           color: #495057;
           margin-bottom: 1rem;
           font-size: 1.5rem;
           font-weight: 500;
         }
-        
+
         p {
           color: #6c757d;
           line-height: 1.6;
           margin: 0;
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .statistics-page {
+    padding: 1rem;
+
+    .statistics-container {
+      padding: 1.5rem;
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .statistics-content {
+        .chart-section {
+          padding: 1.5rem;
+
+          .chart-container {
+            min-height: 300px;
+          }
+        }
+
+        .summary-section {
+          .summary-cards {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+          }
         }
       }
     }

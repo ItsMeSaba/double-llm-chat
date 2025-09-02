@@ -1,7 +1,7 @@
-import { Router, Request, Response } from "express";
+﻿import { Router, Request, Response } from "express";
 import { db } from "../db";
 import { chats, messages, modelResponses, feedback } from "../db/schema";
-import { eq, asc } from "drizzle-orm";
+import { eq, asc, count, sql } from "drizzle-orm";
 import { getOrCreateChat } from "../base/helpers/chat/getOrCreateChat";
 
 const router = Router();
@@ -48,36 +48,44 @@ router.get("/messages", async (req: Request, res: Response) => {
 
     messagesWithResponses.forEach((row) => {
       const messageId = row.messageId;
-
       if (!messageMap.has(messageId)) {
         messageMap.set(messageId, {
-          winnerModel: row.winnerModel,
           id: messageId,
           content: row.messageContent,
           sender: row.messageSender,
           createdAt: row.messageCreatedAt,
           responses: [],
+          feedback: null,
         });
       }
 
       if (row.responseId) {
-        messageMap.get(messageId).responses.push({
-          id: row.responseId,
-          model: row.responseModel,
-          response: row.responseContent,
-          createdAt: row.responseCreatedAt,
-        });
+        const existingResponse = messageMap
+          .get(messageId)
+          .responses.find((r: any) => r.id === row.responseId);
+        if (!existingResponse) {
+          messageMap.get(messageId).responses.push({
+            id: row.responseId,
+            model: row.responseModel,
+            content: row.responseContent,
+            createdAt: row.responseCreatedAt,
+          });
+        }
+      }
+
+      if (row.feedbackId && !messageMap.get(messageId).feedback) {
+        messageMap.get(messageId).feedback = {
+          id: row.feedbackId,
+          winnerModel: row.winnerModel,
+        };
       }
     });
 
-    const formattedMessages = Array.from(messageMap.values());
+    const groupedMessages = Array.from(messageMap.values());
 
     return res.status(200).json({
       success: true,
-      data: {
-        chatId: chat.id,
-        messages: formattedMessages,
-      },
+      data: groupedMessages,
     });
   } catch (error) {
     console.error("Error fetching messages:", error);
@@ -198,6 +206,61 @@ router.post("/feedback", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error saving feedback:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// GET /statistics - Get feedback statistics for the authenticated user
+router.get("/statistics", async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    const userId = parseInt(user.userId);
+
+    // Get or create chat for the user
+    const chat = await getOrCreateChat(userId);
+    if (!chat) {
+      return res.status(500).json({ error: "Failed to retrieve chat" });
+    }
+
+    // Get feedback statistics
+    const feedbackStats = await db
+      .select({
+        winnerModel: feedback.winnerModel,
+        count: count(),
+      })
+      .from(feedback)
+      .innerJoin(messages, eq(feedback.messageId, messages.id))
+      .where(eq(messages.chatId, chat.id))
+      .groupBy(feedback.winnerModel);
+
+    // Format the data for the pie chart
+    const chartData = feedbackStats.map(stat => ({
+      name: stat.winnerModel === 'gpt-4o-mini' ? 'GPT-4o Mini' : 'Gemini 1.5 Flash',
+      value: stat.count,
+      model: stat.winnerModel
+    }));
+
+    // Calculate total feedback count
+    const totalFeedback = feedbackStats.reduce((sum, stat) => sum + stat.count, 0);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        chartData,
+        totalFeedback,
+        summary: {
+          gptLikes: feedbackStats.find(stat => stat.winnerModel === 'gpt-4o-mini')?.count || 0,
+          geminiLikes: feedbackStats.find(stat => stat.winnerModel === 'gemini-1.5-flash')?.count || 0,
+        }
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching statistics:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 });
