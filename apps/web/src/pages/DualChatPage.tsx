@@ -5,9 +5,11 @@ import { socketService } from "../services/socketService";
 import {
   fetchUserMessages,
   transformToSocketMessages,
-  type DualChatMessage,
 } from "../services/chatService";
+import { submitFeedback } from "../services/feedbackService";
 import "./DualChatPage.scss";
+// @ts-ignore
+import ThumbsUpIcon from "../assets/thumbs-up.svg?react";
 
 interface Message {
   id: string;
@@ -28,6 +30,9 @@ export function DualChatPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [feedbackMap, setFeedbackMap] = useState<Map<number, string>>(
+    new Map()
+  );
 
   useEffect(() => {
     loadUserMessages();
@@ -42,6 +47,15 @@ export function DualChatPage() {
         response.data.messages
       );
       setMessages(transformedMessages);
+
+      // Load feedback data
+      const newFeedbackMap = new Map<number, string>();
+      response.data.messages.forEach((message) => {
+        if (message.winnerModel) {
+          newFeedbackMap.set(message.id, message.winnerModel);
+        }
+      });
+      setFeedbackMap(newFeedbackMap);
     } catch (error) {
       console.error("Error loading messages:", error);
       // If no messages exist or there's an error, show default welcome messages
@@ -66,6 +80,29 @@ export function DualChatPage() {
 
   const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
     ref.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Handle feedback submission
+  const handleFeedback = async (
+    messageId: number,
+    winnerModel: "gpt-4o-mini" | "gemini-1.5-flash"
+  ) => {
+    try {
+      await submitFeedback({ messageId, winnerModel });
+
+      // Update local feedback state
+      setFeedbackMap((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(messageId, winnerModel);
+        return newMap;
+      });
+
+      console.log(
+        `Feedback submitted: ${winnerModel} is better for message ${messageId}`
+      );
+    } catch (error) {
+      console.error(`Error submitting feedback:`, error);
+    }
   };
 
   useEffect(() => {
@@ -237,6 +274,8 @@ export function DualChatPage() {
   ) => {
     const chatMessages = getMessagesForChat(chatType);
 
+    console.log("chatMessages", chatMessages);
+
     return (
       <div className="chat-window">
         <div className="chat-header">
@@ -250,19 +289,37 @@ export function DualChatPage() {
               <p>Loading messages...</p>
             </div>
           ) : (
-            chatMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`message ${message.sender === "user" ? "user-message" : "ai-message"}`}
-              >
-                <div className="message-content">
-                  <p className="message-text">{message.text}</p>
-                  <span className="message-time">
-                    {formatTime(message.timestamp)}
-                  </span>
+            chatMessages.map((message) => {
+              const isLiked =
+                feedbackMap.get(message?.messageId || -1) === chatType;
+
+              return (
+                <div
+                  key={message.id}
+                  className={`message ${message.sender === "user" ? "user-message" : "ai-message"}`}
+                >
+                  <div className="message-content">
+                    <p className="message-text">{message.text}</p>
+                    <span className="message-time">
+                      {formatTime(message.timestamp)}
+                    </span>
+                    {message.sender !== "user" && message.messageId && (
+                      <button
+                        className={`like-btn ${isLiked && "liked"}`}
+                        onClick={() =>
+                          handleFeedback(message.messageId!, chatType)
+                        }
+                        title="Mark this response as better"
+                      >
+                        <ThumbsUpIcon
+                          style={{ color: isLiked ? "white" : "black" }}
+                        />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
 
           {!isLoadingMessages && isTyping && (
@@ -287,8 +344,12 @@ export function DualChatPage() {
     <div className="dual-chat-container">
       <div className="dual-chat-header">
         <h1>Dual LLM Chat (Socket.IO)</h1>
-        <button onClick={handleLogout} className="logout-btn">
-          Logout
+        <button
+          onClick={handleLogout}
+          className="logout-btn"
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? "Logging out..." : "Logout"}
         </button>
       </div>
 
@@ -299,6 +360,7 @@ export function DualChatPage() {
           isTypingGPT,
           messagesEndRefGPT
         )}
+
         {renderChatWindow(
           "gemini-1.5-flash",
           "Gemini 1.5-flash",

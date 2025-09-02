@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { db } from "../db";
-import { chats, messages, modelResponses } from "../db/schema";
+import { chats, messages, modelResponses, feedback } from "../db/schema";
 import { eq, asc } from "drizzle-orm";
 import { getOrCreateChat } from "../base/helpers/chat/getOrCreateChat";
 
@@ -23,7 +23,7 @@ router.get("/messages", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Failed to retrieve chat" });
     }
 
-    // Fetch messages with their model responses
+    // Fetch messages with their model responses and feedback
     const messagesWithResponses = await db
       .select({
         messageId: messages.id,
@@ -34,9 +34,12 @@ router.get("/messages", async (req: Request, res: Response) => {
         responseModel: modelResponses.model,
         responseContent: modelResponses.response,
         responseCreatedAt: modelResponses.createdAt,
+        feedbackId: feedback.id,
+        winnerModel: feedback.winnerModel,
       })
       .from(messages)
       .leftJoin(modelResponses, eq(messages.id, modelResponses.messageId))
+      .leftJoin(feedback, eq(messages.id, feedback.messageId))
       .where(eq(messages.chatId, chat.id))
       .orderBy(asc(messages.createdAt), asc(modelResponses.createdAt));
 
@@ -48,6 +51,7 @@ router.get("/messages", async (req: Request, res: Response) => {
 
       if (!messageMap.has(messageId)) {
         messageMap.set(messageId, {
+          winnerModel: row.winnerModel,
           id: messageId,
           content: row.messageContent,
           sender: row.messageSender,
@@ -134,6 +138,66 @@ router.post("/send", async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Error sending message:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// POST /feedback - Save user feedback for LLM responses
+router.post("/feedback", async (req: Request, res: Response) => {
+  try {
+    const { messageId, winnerModel } = req.body;
+    const user = req.user;
+
+    if (!user) {
+      return res.status(401).json({ error: "User not authenticated" });
+    }
+
+    if (!messageId || !winnerModel) {
+      return res.status(400).json({ 
+        error: "Message ID and winner model are required" 
+      });
+    }
+
+    if (!["gpt-4o-mini", "gemini-1.5-flash"].includes(winnerModel)) {
+      return res.status(400).json({ 
+        error: "Invalid winner model. Must be 'gpt-4o-mini' or 'gemini-1.5-flash'" 
+      });
+    }
+
+    // Check if feedback already exists for this message
+    const existingFeedback = await db
+      .select()
+      .from(feedback)
+      .where(eq(feedback.messageId, messageId))
+      .limit(1);
+
+    if (existingFeedback.length > 0) {
+      // Update existing feedback
+      await db
+        .update(feedback)
+        .set({ 
+          winnerModel,
+          createdAt: new Date()
+        })
+        .where(eq(feedback.messageId, messageId));
+    } else {
+      // Create new feedback
+      await db.insert(feedback).values({
+        messageId,
+        winnerModel,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback saved successfully",
+      data: {
+        messageId,
+        winnerModel,
+      },
+    });
+  } catch (error) {
+    console.error("Error saving feedback:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -8,6 +8,7 @@ export interface ModelResponse {
 }
 
 export interface MessageWithResponses {
+  winnerModel?: string;
   id: number;
   content: string;
   sender: string;
