@@ -42,19 +42,19 @@ export function DualChatPage() {
     try {
       setIsLoadingMessages(true);
       const response = await fetchUserMessages();
-      console.log("response.data.messages", response.data.messages);
-      const transformedMessages = transformToSocketMessages(
-        response.data.messages
-      );
+      console.log("response.data.messages", response.data);
+      const transformedMessages = transformToSocketMessages(response.data);
       setMessages(transformedMessages);
 
       // Load feedback data
       const newFeedbackMap = new Map<number, string>();
-      response.data.messages.forEach((message) => {
-        if (message.winnerModel) {
-          newFeedbackMap.set(message.id, message.winnerModel);
+      console.log("===>", response.data);
+      response.data.forEach((message) => {
+        if (message?.feedback?.winnerModel) {
+          newFeedbackMap.set(message.id, message.feedback.winnerModel);
         }
       });
+
       setFeedbackMap(newFeedbackMap);
     } catch (error) {
       console.error("Error loading messages:", error);
@@ -293,6 +293,8 @@ export function DualChatPage() {
               const isLiked =
                 feedbackMap.get(message?.messageId || -1) === chatType;
 
+              console.log("isliked", Array.from(feedbackMap.entries()));
+
               return (
                 <div
                   key={message.id}
@@ -343,7 +345,7 @@ export function DualChatPage() {
   return (
     <div className="dual-chat-container">
       <div className="dual-chat-header">
-        <h1>Dual LLM Chat (Socket.IO)</h1>
+        <h1>Dual LLM Chat</h1>
         <button
           onClick={handleLogout}
           className="logout-btn"
