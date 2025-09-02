@@ -1,4 +1,4 @@
-import {
+﻿import {
   BrowserRouter as Router,
   Routes,
   Route,
@@ -7,6 +7,7 @@ import {
 import { LoginPage } from "./pages/Login/LoginPage";
 import { ChatPage } from "./pages/ChatPage";
 import { DualChatPage } from "./pages/DualChatPage";
+import { StatisticsPage } from "./pages/StatisticsPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./App.scss";
 
@@ -35,7 +36,16 @@ function App() {
             }
           />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute>
+                <StatisticsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
         </Routes>
       </div>
     </Router>
