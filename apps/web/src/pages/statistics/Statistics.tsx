@@ -16,8 +16,8 @@ import {
 import {
   fetchStatistics,
   type StatisticsResponse,
-} from "../services/statisticsService";
-import "./StatisticsPage.scss";
+} from "../../services/statisticsService";
+import "./styles.scss";
 
 const COLORS = ["#667eea", "#764ba2"];
 

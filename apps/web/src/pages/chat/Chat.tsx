@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../base/context/AuthProvider";
-import "./ChatPage.scss";
+import { useAuth } from "../../base/context/AuthProvider";
+import "./styles.scss";
 
 interface Message {
   id: string;

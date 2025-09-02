@@ -4,10 +4,10 @@
   Route,
   Navigate,
 } from "react-router-dom";
-import { LoginPage } from "./pages/Login/LoginPage";
-import { ChatPage } from "./pages/ChatPage";
-import { DualChatPage } from "./pages/DualChatPage";
-import { StatisticsPage } from "./pages/StatisticsPage";
+import { LoginPage } from "./pages/login/Login";
+import { ChatPage } from "./pages/chat/Chat";
+import { DualChatPage } from "./pages/dualChat/DualChat";
+import { StatisticsPage } from "./pages/statistics/Statistics";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import "./App.scss";
 

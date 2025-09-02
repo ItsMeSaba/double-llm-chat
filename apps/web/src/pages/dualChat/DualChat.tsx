@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../base/context/AuthProvider";
-import { socketService } from "../services/socketService";
+import { useAuth } from "../../base/context/AuthProvider";
+import { socketService } from "../../services/socketService";
 import {
   fetchUserMessages,
   transformToSocketMessages,
-} from "../services/chatService";
-import { submitFeedback } from "../services/feedbackService";
-import "./DualChatPage.scss";
+} from "../../services/chatService";
+import { submitFeedback } from "../../services/feedbackService";
+import "./styles.scss";
 // @ts-ignore
-import ThumbsUpIcon from "../assets/thumbs-up.svg?react";
+import ThumbsUpIcon from "../../assets/thumbs-up.svg?react";
 
 interface Message {
   id: string;
@@ -350,11 +350,8 @@ export function DualChatPage() {
       <div className="dual-chat-header">
         <h1>Dual LLM Chat</h1>
         <div className="header-buttons">
-          <button
-            onClick={handleStatisticsClick}
-            className="statistics-btn"
-          >
-             Statistics
+          <button onClick={handleStatisticsClick} className="statistics-btn">
+            Statistics
           </button>
           <button
             onClick={handleLogout}
@@ -405,5 +402,3 @@ export function DualChatPage() {
     </div>
   );
 }
-
-

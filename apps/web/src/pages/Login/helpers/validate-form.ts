@@ -1,4 +1,4 @@
-import type { FormData } from "../LoginPage";
+import type { FormData } from "../Login";
 
 export function validateForm(
   formData: FormData,
