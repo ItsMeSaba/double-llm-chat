@@ -13,17 +13,13 @@ export function UserMenu() {
       const result = await logout();
 
       if (result.success) {
-        // Logout successful, redirect to login
         navigate("/");
       } else {
-        // Logout failed but local session was cleared
         console.warn("Logout warning:", result.error);
-        // Still redirect to login since local session is cleared
         navigate("/");
       }
     } catch (error) {
       console.error("Logout error:", error);
-      // Even on error, redirect to login
       navigate("/");
     } finally {
       setIsLoggingOut(false);
