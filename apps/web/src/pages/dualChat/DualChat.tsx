@@ -42,13 +42,12 @@ export function DualChatPage() {
     try {
       setIsLoadingMessages(true);
       const response = await fetchUserMessages();
-      console.log("response.data.messages", response.data);
       const transformedMessages = transformToSocketMessages(response.data);
       setMessages(transformedMessages);
 
       // Load feedback data
       const newFeedbackMap = new Map<number, string>();
-      console.log("===>", response.data);
+
       response.data.forEach((message) => {
         if (message?.feedback?.winnerModel) {
           newFeedbackMap.set(message.id, message.feedback.winnerModel);
@@ -87,7 +86,6 @@ export function DualChatPage() {
     winnerModel: "gpt-4o-mini" | "gemini-1.5-flash"
   ) => {
     try {
-      console.log("messageId, winnerModel", messageId, winnerModel);
       await submitFeedback({ messageId, winnerModel });
 
       // Update local feedback state
@@ -130,7 +128,6 @@ export function DualChatPage() {
 
     socketService.onLLMResponses((data) => {
       data.responses.forEach((response) => {
-        console.log("socketService.onLLMResponses", response);
         const aiMessage: Message = {
           id: `response-${response.messageId}-${response.model}`,
           text: response.response,
@@ -195,7 +192,6 @@ export function DualChatPage() {
 
         // Check if this message already exists to prevent duplicates
         setMessages((prev) => {
-          console.log("userMessage, prev", userMessage, prev);
           if (isDuplicateMessage(userMessage, prev)) {
             console.log("User message already exists, skipping duplicate");
             return prev;
@@ -251,8 +247,6 @@ export function DualChatPage() {
         newMessage.messageId === existing.messageId &&
         newMessage.sender === existing.sender
       ) {
-        console.log("FIRST STATEMENT", newMessage, existing);
-        console.log("RETURNING FIRST STATEMENT");
         return true;
       }
 

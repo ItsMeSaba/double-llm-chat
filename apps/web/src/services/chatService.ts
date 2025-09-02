@@ -44,8 +44,6 @@ export async function fetchUserMessages(): Promise<FetchMessagesResponse> {
 
   const data = await response.json();
 
-  console.log("data.data", data.data);
-
   // Convert date strings back to Date objects
   data.data.forEach((message: MessageWithResponses) => {
     message.createdAt = new Date(message.createdAt);
@@ -80,7 +78,6 @@ export function transformToSocketMessages(
         response.model === "gpt-4o-mini" ||
         response.model === "gemini-1.5-flash"
       ) {
-        console.log("CHATSERVICE", response);
         result.push({
           id: `${message.id}-${response.id}`,
           text: response.content,

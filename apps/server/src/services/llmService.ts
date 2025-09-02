@@ -69,10 +69,6 @@ export class LLMService {
         this.callGeminiFlash(userMessage),
       ]);
 
-      console.log("gptResponse", gptResponse);
-      console.log("geminiResponse", geminiResponse);
-      console.log("messageId", messageId);
-
       // Add GPT-4o-mini response
       if (gptResponse.status === "fulfilled") {
         responses.push({

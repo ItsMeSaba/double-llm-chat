@@ -64,8 +64,6 @@ async function findTokenInDatabase(token: string) {
     where: eq(refreshTokens.status, "active"),
   });
 
-  console.log("token, tokenRecord.tokenHash", token);
-
   // Find the token by comparing hashes
   for (const tokenRecord of allTokens) {
     const isMatch = await bcrypt.compare(token, tokenRecord.tokenHash);

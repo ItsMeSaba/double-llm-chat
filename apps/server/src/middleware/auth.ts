@@ -33,18 +33,13 @@ export function authMiddleware(
   res: Response,
   next: NextFunction
 ): void {
-  console.log("AUTH MIDDLEWARE");
-  // Skip authentication for public routes
   if (isPublicRoute(req.path)) {
-    console.log("PUBLIC ROUTE");
     next();
     return;
   }
 
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
-
-  console.log("TOKEN MIDDLEWARE", token);
 
   if (!token) {
     res.status(401).json({ error: "Access token required" });
@@ -58,8 +53,6 @@ export function authMiddleware(
       return;
     }
 
-    console.log("decoded", decoded);
-    // Add user info to request for later use
     req.user = decoded;
     next();
   } catch (error) {

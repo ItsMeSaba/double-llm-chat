@@ -44,11 +44,6 @@ router.post("/login", async (req, res) => {
 
   const userRecord = user[0];
 
-  console.log(
-    "bcrypt.compare(password, userRecord.passwordHash)",
-    await bcrypt.compare(password, userRecord.passwordHash)
-  );
-
   if (!(await bcrypt.compare(password, userRecord.passwordHash))) {
     return res.status(401).json({ error: "Invalid email or password" });
   }
@@ -118,8 +113,6 @@ router.post("/register", async (req, res) => {
       })
       .returning();
 
-    console.log("newUser", newUser);
-
     const accessToken = generateAccessToken({
       email,
       userId: String(newUser[0].id),
@@ -167,7 +160,6 @@ router.post("/refresh", async (req, res) => {
     // Check if refresh token is active in database
     const tokenCheck = await isRefreshTokenActive(refreshToken);
 
-    console.log("tokenCheck", tokenCheck);
     if (!tokenCheck.isActive) {
       return res.status(403).json({ error: "Refresh token is not active" });
     }
