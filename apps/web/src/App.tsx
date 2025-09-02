@@ -5,7 +5,6 @@
   Navigate,
 } from "react-router-dom";
 import { LoginPage } from "./pages/login/Login";
-import { ChatPage } from "./pages/chat/Chat";
 import { DualChatPage } from "./pages/dualChat/DualChat";
 import { StatisticsPage } from "./pages/statistics/Statistics";
 import { ProtectedRoute } from "./components/ProtectedRoute";
@@ -17,15 +16,6 @@ function App() {
       <div className="App">
         <Routes>
           <Route path="/" element={<LoginPage />} />
-
-          <Route
-            path="/chat"
-            element={
-              <ProtectedRoute>
-                <ChatPage />
-              </ProtectedRoute>
-            }
-          />
 
           <Route
             path="/dual-chat"
