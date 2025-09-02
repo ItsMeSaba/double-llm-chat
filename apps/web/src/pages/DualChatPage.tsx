@@ -225,6 +225,10 @@ export function DualChatPage() {
     }
   };
 
+  const handleStatisticsClick = () => {
+    navigate("/statistics");
+  };
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
@@ -345,13 +349,21 @@ export function DualChatPage() {
     <div className="dual-chat-container">
       <div className="dual-chat-header">
         <h1>Dual LLM Chat</h1>
-        <button
-          onClick={handleLogout}
-          className="logout-btn"
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? "Logging out..." : "Logout"}
-        </button>
+        <div className="header-buttons">
+          <button
+            onClick={handleStatisticsClick}
+            className="statistics-btn"
+          >
+             Statistics
+          </button>
+          <button
+            onClick={handleLogout}
+            className="logout-btn"
+            disabled={isLoggingOut}
+          >
+            {isLoggingOut ? "Logging out..." : "Logout"}
+          </button>
+        </div>
       </div>
 
       <div className="chat-windows-container">
@@ -393,3 +405,5 @@ export function DualChatPage() {
     </div>
   );
 }
+
+
