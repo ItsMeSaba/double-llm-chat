@@ -1,9 +1,15 @@
-import { http } from "../service/http";
+﻿import { http } from "../service/http";
 
 export interface ChartData {
   name: string;
   value: number;
   model: string;
+}
+
+export interface DailyBarData {
+  date: string;
+  'GPT-4o Mini': number;
+  'Gemini 1.5 Flash': number;
 }
 
 export interface StatisticsSummary {
@@ -13,6 +19,7 @@ export interface StatisticsSummary {
 
 export interface StatisticsResponse {
   chartData: ChartData[];
+  dailyBarData: DailyBarData[];
   totalFeedback: number;
   summary: StatisticsSummary;
 }
