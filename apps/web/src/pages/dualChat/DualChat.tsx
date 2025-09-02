@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+﻿import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../base/context/AuthProvider";
 import { socketService } from "../../services/socketService";
@@ -7,9 +7,8 @@ import {
   transformToSocketMessages,
 } from "../../services/chatService";
 import { submitFeedback } from "../../services/feedbackService";
+import { ChatWindow } from "./components/ChatWindow";
 import "./styles.scss";
-// @ts-ignore
-import ThumbsUpIcon from "../../assets/thumbs-up.svg?react";
 
 interface Message {
   id: string;
@@ -57,6 +56,7 @@ export function DualChatPage() {
       setFeedbackMap(newFeedbackMap);
     } catch (error) {
       console.error("Error loading messages:", error);
+
       // If no messages exist or there's an error, show default welcome messages
       setMessages([
         {
@@ -177,11 +177,7 @@ export function DualChatPage() {
     setIsTypingGemini(true);
 
     try {
-      // Send message via Socket.IO and wait for confirmation
       socketService.sendMessage(messageText, (data) => {
-        console.log("Message received:", data);
-
-        // Add the user message to state only after server confirmation
         const userMessage: Message = {
           id: data.messageId.toString(),
           text: messageText,
@@ -202,7 +198,6 @@ export function DualChatPage() {
       });
     } catch (error) {
       console.error("Error sending message:", error);
-      // Clear typing indicators on error
       setIsTypingGPT(false);
       setIsTypingGemini(false);
     }
@@ -223,10 +218,6 @@ export function DualChatPage() {
 
   const handleStatisticsClick = () => {
     navigate("/statistics");
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   const getMessagesForChat = (chatType: "gpt-4o-mini" | "gemini-1.5-flash") => {
@@ -263,82 +254,6 @@ export function DualChatPage() {
     });
   };
 
-  const renderChatWindow = (
-    chatType: "gpt-4o-mini" | "gemini-1.5-flash",
-    title: string,
-    isTyping: boolean,
-    messagesEndRef: React.RefObject<HTMLDivElement | null>
-  ) => {
-    const chatMessages = getMessagesForChat(chatType);
-
-    console.log("chatMessages", chatMessages);
-
-    return (
-      <div className="chat-window">
-        <div className="chat-header">
-          <h2>{title}</h2>
-        </div>
-
-        <div className="messages-container">
-          {isLoadingMessages ? (
-            <div className="loading-container">
-              <div className="loading-spinner"></div>
-              <p>Loading messages...</p>
-            </div>
-          ) : (
-            chatMessages.map((message) => {
-              const isLiked =
-                feedbackMap.get(message?.messageId || -1) === chatType;
-
-              return (
-                <div
-                  key={message.id}
-                  className={`message ${message.sender === "user" ? "user-message" : "ai-message"}`}
-                >
-                  <div className="message-content">
-                    <p className="message-text">{message.text}</p>
-                    <span className="message-time">
-                      {formatTime(message.timestamp)}
-                    </span>
-
-                    {/* {console.log("message HERE BROSKI", message)} */}
-                    {message.sender !== "user" && (
-                      <button
-                        className={`like-btn ${isLiked && "liked"}`}
-                        onClick={() =>
-                          handleFeedback(message.messageId!, chatType)
-                        }
-                        title="Mark this response as better"
-                      >
-                        <ThumbsUpIcon
-                          style={{ color: isLiked ? "white" : "black" }}
-                        />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
-
-          {!isLoadingMessages && isTyping && (
-            <div className="message ai-message">
-              <div className="message-content">
-                <div className="typing-indicator">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="dual-chat-container">
       <div className="dual-chat-header">
@@ -358,19 +273,27 @@ export function DualChatPage() {
       </div>
 
       <div className="chat-windows-container">
-        {renderChatWindow(
-          "gpt-4o-mini",
-          "GPT-4o-mini",
-          isTypingGPT,
-          messagesEndRefGPT
-        )}
+        <ChatWindow
+          chatType="gpt-4o-mini"
+          title="GPT-4o-mini"
+          isTyping={isTypingGPT}
+          messagesEndRef={messagesEndRefGPT}
+          messages={getMessagesForChat("gpt-4o-mini")}
+          isLoadingMessages={isLoadingMessages}
+          feedbackMap={feedbackMap}
+          onFeedback={handleFeedback}
+        />
 
-        {renderChatWindow(
-          "gemini-1.5-flash",
-          "Gemini 1.5-flash",
-          isTypingGemini,
-          messagesEndRefGemini
-        )}
+        <ChatWindow
+          chatType="gemini-1.5-flash"
+          title="Gemini 1.5-flash"
+          isTyping={isTypingGemini}
+          messagesEndRef={messagesEndRefGemini}
+          messages={getMessagesForChat("gemini-1.5-flash")}
+          isLoadingMessages={isLoadingMessages}
+          feedbackMap={feedbackMap}
+          onFeedback={handleFeedback}
+        />
       </div>
 
       <form onSubmit={handleSendMessage} className="message-input-form">
