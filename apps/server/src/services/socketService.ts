@@ -3,6 +3,7 @@ import { Server as HTTPServer } from "http";
 import { db } from "../db";
 import { chats, messages, modelResponses } from "../db/schema";
 import { eq } from "drizzle-orm";
+import { LLMService, LLMResponse } from "./llmService";
 
 interface SocketUser {
   userId: string;
@@ -14,17 +15,14 @@ interface ChatMessage {
   chatId?: number;
 }
 
-interface LLMResponse {
-  model: string;
-  response: string;
-  messageId: number;
-}
-
 export class SocketService {
   private io: SocketIOServer;
   private userSockets: Map<string, string> = new Map(); // userId -> socketId
+  private llmService: LLMService;
 
   constructor(server: HTTPServer) {
+    // Initialize LLM service
+    this.llmService = new LLMService();
     this.io = new SocketIOServer(server, {
       cors: {
         origin: process.env.FRONTEND_URL || "http://localhost:5173",
@@ -174,48 +172,8 @@ export class SocketService {
   }
 
   private async callLLMs(userMessage: string): Promise<LLMResponse[]> {
-    // Simulate API calls to different LLMs
-    // Replace this with actual LLM API integrations
-
-    const responses: LLMResponse[] = [];
-
-    // Simulate GPT-4o-mini response
-    const gptResponse = await this.simulateLLMCall("gpt-4o-mini", userMessage);
-    responses.push({
-      model: "gpt-4o-mini",
-      response: gptResponse,
-      messageId: 0, // Will be set by caller
-    });
-
-    // Simulate Gemini-1.5-flash response
-    const geminiResponse = await this.simulateLLMCall(
-      "gemini-1.5-flash",
-      userMessage
-    );
-    responses.push({
-      model: "gemini-1.5-flash",
-      response: geminiResponse,
-      messageId: 0, // Will be set by caller
-    });
-
-    return responses;
-  }
-
-  private async simulateLLMCall(
-    model: string,
-    message: string
-  ): Promise<string> {
-    // Simulate API delay
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000 + Math.random() * 2000)
-    );
-
-    // Simulate different response styles
-    if (model === "gpt-4o-mini") {
-      return `[GPT-4o-mini] I understand you said: "${message}". This is a simulated response from OpenAI's GPT-4o-mini model. In a real implementation, this would be an actual API call to the model.`;
-    } else {
-      return `[Gemini-1.5-flash] You mentioned: "${message}". This is a simulated response from Google's Gemini-1.5-flash model. In a real implementation, this would be an actual API call to the model.`;
-    }
+    // Call actual LLM APIs instead of mock responses
+    return await this.llmService.callAllLLMs(userMessage);
   }
 
   private async saveLLMResponse(
@@ -243,3 +201,4 @@ export class SocketService {
     this.io.emit(event, data);
   }
 }
+
