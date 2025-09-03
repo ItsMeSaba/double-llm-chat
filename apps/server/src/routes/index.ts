@@ -1,10 +1,8 @@
 import { Express } from "express";
-import { apiRoutes } from "./apiRoutes";
 import { authRoutes } from "./auth";
 import { chatRoutes } from "./chat";
 
 export function setupRoutes(app: Express): void {
-  app.use("/api", apiRoutes);
   app.use("/api/auth", authRoutes);
   app.use("/api/chat", chatRoutes);
 
