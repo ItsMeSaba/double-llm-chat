@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { validateForm } from "./helpers/validate-form";
-import { login, register } from "../../service/auth";
+import { login, register } from "../../services/auth";
 import { setAccessToken } from "../../services/http";
 import { useAuth } from "../../base/context/AuthProvider";
 import { Navigate } from "react-router-dom";
