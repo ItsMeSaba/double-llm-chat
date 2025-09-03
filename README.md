@@ -1,3 +1,9 @@
+> ℹ️ **Authentication and socket security details:**  
+> For comprehensive information about authentication flows, token management, and socket security, please refer to:
+>
+> - [`apps/server/AUTH.md`](apps/server/AUTH.md)
+> - [`apps/server/SOCKET_SECURITY.md`](apps/server/SOCKET_SECURITY.md)
+
 # 🚀 Project Setup & Run Guide
 
 This project is organized as a **monorepo** with two applications:
