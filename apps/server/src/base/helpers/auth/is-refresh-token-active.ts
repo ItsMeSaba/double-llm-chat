@@ -17,7 +17,6 @@ export async function isRefreshTokenActive(
   token: string
 ): Promise<IsRefreshTokenActiveResult> {
   try {
-    // Find the refresh token in the database
     const tokenRecord = await findTokenInDatabase(token);
 
     if (!tokenRecord) {
@@ -27,7 +26,6 @@ export async function isRefreshTokenActive(
       };
     }
 
-    // Check if token is expired
     if (isTokenExpired(tokenRecord.expiresAt)) {
       return {
         isActive: false,
@@ -35,8 +33,10 @@ export async function isRefreshTokenActive(
       };
     }
 
-    // Check if token status is active
     if (tokenRecord.status !== "active") {
+      // If we end up here, it means we got provided revoked token, indicating possibility of theft
+      // Thus we will revoke all tokens with same FamilyIds
+
       return {
         isActive: false,
         error: `Token status is ${tokenRecord.status}`,

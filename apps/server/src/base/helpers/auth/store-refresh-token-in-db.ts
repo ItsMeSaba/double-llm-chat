@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 interface CreateRefreshTokenParams {
   userId: number;
   token: string;
+  keepFamilyId?: boolean;
 }
 
 interface CreateRefreshTokenResult {
@@ -17,18 +18,21 @@ interface CreateRefreshTokenResult {
 export async function storeRefreshTokenInDB({
   userId,
   token,
+  keepFamilyId,
 }: CreateRefreshTokenParams): Promise<CreateRefreshTokenResult> {
   try {
     // Find the latest active refresh token for this user
     const latestToken = await findLatestActiveToken(userId);
 
-    // Rotate the latest token if it exists
+    console.log("latestToken", latestToken);
     if (latestToken) {
       await rotateExistingToken(latestToken.id);
     }
 
-    // Create new token with active status
-    await createNewActiveToken(userId, token);
+    const familyId =
+      keepFamilyId && latestToken?.familyId ? latestToken.familyId : undefined;
+
+    await createNewActiveToken(userId, token, familyId);
 
     return {
       success: true,
@@ -61,16 +65,17 @@ async function rotateExistingToken(tokenId: number): Promise<void> {
 
 async function createNewActiveToken(
   userId: number,
-  token: string
+  token: string,
+  familyId?: string
 ): Promise<void> {
   const tokenHash = await hashToken(token);
-  const familyId = `family_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const newFamilyId = `family_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
   await db.insert(refreshTokens).values({
     userId,
     tokenHash,
-    familyId,
+    familyId: familyId ?? newFamilyId,
     status: "active",
     expiresAt,
     createdAt: new Date(),

@@ -183,6 +183,7 @@ router.post("/refresh", async (req, res) => {
     await storeRefreshTokenInDB({
       userId: payload.userId,
       token: newRefreshToken!,
+      keepFamilyId: true,
     });
 
     res.cookie("refreshToken", newRefreshToken, {

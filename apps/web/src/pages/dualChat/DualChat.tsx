@@ -45,7 +45,6 @@ export function DualChatPage() {
       const transformedMessages = transformToSocketMessages(response.data);
       setMessages(transformedMessages);
 
-      // Load feedback data
       const newFeedbackMap = new Map<number, string>();
 
       response.data.forEach((message) => {
@@ -187,9 +186,9 @@ export function DualChatPage() {
           messageId: data.messageId,
         };
 
-        // Check if this message already exists to prevent duplicates
         setMessages((prev) => {
           if (isDuplicateMessage(userMessage, prev)) {
+            // Used to resolve weird message duplication as temporary workaround solution
             console.log("User message already exists, skipping duplicate");
             return prev;
           }
