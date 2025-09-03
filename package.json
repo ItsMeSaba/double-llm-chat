@@ -7,18 +7,12 @@
   "type": "commonjs",
   "private": true,
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ],
   "packageManager": "yarn@4.3.1",
   "scripts": {
-    "dev": "turbo run dev --parallel",
-    "build": "turbo run build",
-    "start": "turbo run start",
-    "typecheck": "turbo run typecheck",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "format": "prettier --write ."
+    "dev:web": "yarn workspace web run dev",
+    "dev:server": "yarn workspace @supernova-task/server run dev"
   },
   "devDependencies": {
     "turbo": "^2.0.0",
