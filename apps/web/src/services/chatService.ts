@@ -3,25 +3,24 @@ import { http } from "./http";
 export interface ModelResponse {
   id: number;
   model: string;
-  response: string;
+  content: string;
   createdAt: Date;
 }
 
 export interface MessageWithResponses {
-  winnerModel?: string;
   id: number;
   content: string;
   sender: string;
   createdAt: Date;
   responses: ModelResponse[];
+  feedback?: {
+    winnerModel?: string;
+  };
 }
 
 export interface FetchMessagesResponse {
   success: boolean;
-  data: {
-    chatId: number;
-    messages: MessageWithResponses[];
-  };
+  data: MessageWithResponses[];
 }
 
 // Message interface expected by DualChatPage
