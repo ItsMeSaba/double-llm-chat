@@ -13,6 +13,12 @@ interface IsRefreshTokenActiveResult {
   error?: string;
 }
 
+interface RevokeFamilyIdResult {
+  success: boolean;
+  revokedCount: number;
+  error?: string;
+}
+
 export async function isRefreshTokenActive(
   token: string
 ): Promise<IsRefreshTokenActiveResult> {
@@ -33,9 +39,11 @@ export async function isRefreshTokenActive(
       };
     }
 
+    console.log("tokenRecord", tokenRecord);
     if (tokenRecord.status !== "active") {
       // If we end up here, it means we got provided revoked token, indicating possibility of theft
       // Thus we will revoke all tokens with same FamilyIds
+      await revokeFamilyId(tokenRecord.familyId);
 
       return {
         isActive: false,
@@ -51,6 +59,50 @@ export async function isRefreshTokenActive(
     console.error("Error checking refresh token status:", error);
     return {
       isActive: false,
+      error: "Internal server error",
+    };
+  }
+}
+
+export async function revokeFamilyId(
+  familyId: string
+): Promise<RevokeFamilyIdResult> {
+  try {
+    const activeTokens = await db.query.refreshTokens.findMany({
+      where: eq(refreshTokens.familyId, familyId),
+    });
+
+    const tokensToRevoke = activeTokens.filter(
+      (token) => token.status === "active"
+    );
+
+    if (tokensToRevoke.length === 0) {
+      return {
+        success: true,
+        revokedCount: 0,
+      };
+    }
+
+    await db
+      .update(refreshTokens)
+      .set({
+        status: "revoked",
+      })
+      .where(eq(refreshTokens.familyId, familyId));
+
+    console.log(
+      `Revoked ${tokensToRevoke.length} tokens for family ID: ${familyId}`
+    );
+
+    return {
+      success: true,
+      revokedCount: tokensToRevoke.length,
+    };
+  } catch (error) {
+    console.error("Error revoking family ID tokens:", error);
+    return {
+      success: false,
+      revokedCount: 0,
       error: "Internal server error",
     };
   }
