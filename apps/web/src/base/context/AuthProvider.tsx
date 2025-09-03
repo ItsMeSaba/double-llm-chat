@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { setAccessToken } from "../../service/http";
+import { setAccessToken } from "../../services/http";
 
 type AuthCtx = {
   isAuthed: boolean;

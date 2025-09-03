@@ -1,5 +1,5 @@
 import { io, Socket } from "socket.io-client";
-import { getAccessToken } from "../service/http";
+import { getAccessToken } from "./http";
 
 interface SocketMessage {
   messageId: number;

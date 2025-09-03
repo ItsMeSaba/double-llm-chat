@@ -1,4 +1,4 @@
-import { http } from "../http";
+import { http } from "../../services/http";
 
 export interface LoginCredentials {
   email: string;

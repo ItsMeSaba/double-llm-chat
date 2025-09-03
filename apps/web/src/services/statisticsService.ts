@@ -1,4 +1,4 @@
-﻿import { http } from "../service/http";
+﻿import { http } from "./http";
 
 export interface ChartData {
   name: string;
@@ -8,8 +8,8 @@ export interface ChartData {
 
 export interface DailyBarData {
   date: string;
-  'GPT-4o Mini': number;
-  'Gemini 1.5 Flash': number;
+  "GPT-4o Mini": number;
+  "Gemini 1.5 Flash": number;
 }
 
 export interface StatisticsSummary {

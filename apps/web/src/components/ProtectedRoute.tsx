@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
-import { getAccessToken } from "../service/http";
+import { getAccessToken } from "../services/http";
 import { useAuth } from "../base/context/AuthProvider";
 
 interface ProtectedRouteProps {

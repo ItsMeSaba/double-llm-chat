@@ -1,5 +1,5 @@
-import { http } from "../http";
-import { setAccessToken } from "../http";
+import { http } from "../../services/http";
+import { setAccessToken } from "../../services/http";
 
 export interface LogoutResponse {
   success: boolean;

@@ -1,4 +1,4 @@
-import { http } from "../service/http";
+import { http } from "./http";
 
 export interface ModelResponse {
   id: number;
