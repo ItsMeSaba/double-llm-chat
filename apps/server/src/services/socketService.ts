@@ -21,7 +21,6 @@ export class SocketService {
   private llmService: LLMService;
 
   constructor(server: HTTPServer) {
-    // Initialize LLM service
     this.llmService = new LLMService();
     this.io = new SocketIOServer(server, {
       cors: {
@@ -38,7 +37,6 @@ export class SocketService {
     this.io.on("connection", (socket) => {
       console.log(`Socket connected: ${socket.id}`);
 
-      // Handle user authentication
       socket.on("authenticate", async (userData: SocketUser) => {
         try {
           this.userSockets.set(userData.userId, socket.id);
@@ -57,7 +55,6 @@ export class SocketService {
         }
       });
 
-      // Handle chat messages
       socket.on("send_message", async (data: ChatMessage) => {
         try {
           const user = socket.data.user as SocketUser;
@@ -66,17 +63,14 @@ export class SocketService {
             return;
           }
 
-          // Get or create chat for user
           const chat = await this.getOrCreateChat(parseInt(user.userId));
 
-          // Save user message to database
           const savedMessage = await this.saveMessage(
             chat.id,
             "user",
             data.message
           );
 
-          // Emit message received confirmation
           socket.emit("message_received", {
             messageId: savedMessage.id,
             chatId: chat.id,
@@ -85,7 +79,6 @@ export class SocketService {
             timestamp: savedMessage.createdAt,
           });
 
-          // Process with LLMs (simulated for now)
           await this.processWithLLMs(savedMessage.id, data.message, socket);
         } catch (error) {
           console.error("Error processing message:", error);
@@ -93,7 +86,6 @@ export class SocketService {
         }
       });
 
-      // Handle disconnection
       socket.on("disconnect", () => {
         const user = socket.data.user as SocketUser;
         if (user) {
@@ -106,7 +98,6 @@ export class SocketService {
   }
 
   private async getOrCreateChat(userId: number) {
-    // Try to find an existing chat for the user
     const existingChat = await db
       .select()
       .from(chats)
@@ -148,10 +139,8 @@ export class SocketService {
     socket: any
   ) {
     try {
-      // Simulate LLM processing (replace with actual LLM API calls)
       const llmResponses = await this.callLLMs(userMessage, messageId);
 
-      // Save LLM responses to database
       for (const response of llmResponses) {
         await this.saveLLMResponse(
           messageId,
@@ -174,7 +163,6 @@ export class SocketService {
     userMessage: string,
     messageId: number
   ): Promise<LLMResponse[]> {
-    // Call actual LLM APIs instead of mock responses
     return await this.llmService.callAllLLMs(userMessage, messageId);
   }
 
@@ -190,7 +178,6 @@ export class SocketService {
     });
   }
 
-  // Method to send message to specific user
   public sendToUser(userId: string, event: string, data: any) {
     const socketId = this.userSockets.get(userId);
     if (socketId) {
@@ -198,7 +185,6 @@ export class SocketService {
     }
   }
 
-  // Method to broadcast to all connected users
   public broadcast(event: string, data: any) {
     this.io.emit(event, data);
   }

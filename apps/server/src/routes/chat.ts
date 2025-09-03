@@ -2,7 +2,7 @@
 import { db } from "../db";
 import { chats, messages, modelResponses, feedback } from "../db/schema";
 import { eq, asc, count, sql } from "drizzle-orm";
-import { getOrCreateChat } from "../base/helpers/chat/getOrCreateChat";
+import { getOrCreateChat } from "../base/helpers/chat/get-or-create-chat";
 
 const router = Router();
 
