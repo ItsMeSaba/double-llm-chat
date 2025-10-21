@@ -1,4 +1,13 @@
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { serverLogout } from "../../services/auth/server-logout";
+import { refreshToken } from "../../services/auth/refresh-token";
 import { setAccessToken } from "../../services/http";
 
 type AuthCtx = {
@@ -12,54 +21,46 @@ const Ctx = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthed, setAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const didRun = useRef(false);
+  const didStrictModeRun = useRef(false);
 
   useEffect(() => {
-    // For StrictMode
-    if (didRun.current) return;
-    didRun.current = true;
+    if (didStrictModeRun.current) return; // For StrictMode
+    didStrictModeRun.current = true;
 
-    (async () => {
-      console.log("running auth provider");
+    const controller = new AbortController();
+
+    async function getRefreshToken() {
       try {
-        const res = await fetch(
-          import.meta.env.VITE_SERVER_URL + "/auth/refresh",
-          {
-            method: "POST",
-            credentials: "include",
-          }
-        );
+        const newRefreshToken = await refreshToken(controller.signal);
 
-        if (res.ok) {
-          const { accessToken } = await res.json();
-
-          if (accessToken) {
-            setAccessToken(accessToken);
-            setAuthed(true);
-          }
+        if (newRefreshToken) {
+          setAccessToken(newRefreshToken);
+          setAuthed(true);
         }
+      } catch (e) {
       } finally {
         setLoading(false);
       }
-    })();
+    }
+
+    getRefreshToken();
+
+    // FIXME: overlapping with StrictMode solution
+    // return () => controller.abort();
   }, []);
 
   async function logout() {
-    console.log("logging out");
-
-    await fetch(import.meta.env.VITE_SERVER_URL + "/auth/logout", {
-      method: "POST",
-      credentials: "include",
-    });
+    await serverLogout();
     setAccessToken(null);
     setAuthed(false);
   }
 
-  return (
-    <Ctx.Provider value={{ isAuthed, loading, logout }}>
-      {children}
-    </Ctx.Provider>
+  const value = useMemo(
+    () => ({ isAuthed, loading, logout }),
+    [isAuthed, loading]
   );
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
