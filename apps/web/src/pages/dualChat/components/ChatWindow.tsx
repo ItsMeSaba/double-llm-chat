@@ -1,27 +1,33 @@
 ﻿import React from "react";
-// @ts-ignore
-import ThumbsUpIcon from "../../../assets/thumbs-up.svg?react";
 
-interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "gpt-4o-mini" | "gemini-1.5-flash";
-  timestamp: Date;
-  messageId?: number;
+import type { AIModel } from "../../../types/global";
+import { Message } from "./Message";
+import { TypingIndicator } from "@/components/modules/typing-indicator/TypingIndicator";
+
+export interface FormattedMessage {
+  id: number;
+  content: string;
+  sender: string;
+  createdAt: Date;
+  responses: {
+    id: number;
+    model: string;
+    content: string;
+  }[];
+  feedback: {
+    id: number;
+    winnerModel: string;
+  } | null;
 }
 
 interface ChatWindowProps {
-  chatType: "gpt-4o-mini" | "gemini-1.5-flash";
+  chatType: AIModel;
   title: string;
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  messages: Message[];
+  messages: FormattedMessage[];
   isLoadingMessages: boolean;
-  feedbackMap: Map<number, string>;
-  onFeedback: (
-    messageId: number,
-    winnerModel: "gpt-4o-mini" | "gemini-1.5-flash"
-  ) => void;
+  onFeedback: (messageId: number, winnerModel: AIModel) => void;
 }
 
 export function ChatWindow({
@@ -31,11 +37,10 @@ export function ChatWindow({
   messagesEndRef,
   messages,
   isLoadingMessages,
-  feedbackMap,
   onFeedback,
 }: ChatWindowProps) {
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const getAiResponse = (message: FormattedMessage) => {
+    return message?.responses?.find((response) => response.model === chatType);
   };
 
   return (
@@ -45,55 +50,46 @@ export function ChatWindow({
       </div>
 
       <div className="messages-container">
-        {isLoadingMessages ? (
+        {isLoadingMessages && (
           <div className="loading-container">
             <div className="loading-spinner"></div>
             <p>Loading messages...</p>
           </div>
-        ) : (
-          messages.map((message) => {
-            const isLiked =
-              feedbackMap.get(message?.messageId || -1) === chatType;
+        )}
+
+        {!isLoadingMessages &&
+          messages?.map((message) => {
+            const aiResponse = getAiResponse(message);
 
             return (
-              <div
-                key={message.id}
-                className={`message ${message.sender === "user" ? "user-message" : "ai-message"}`}
-              >
-                <div className="message-content">
-                  <p className="message-text">{message.text}</p>
-                  <span className="message-time">
-                    {formatTime(message.timestamp)}
-                  </span>
+              <React.Fragment key={message.id}>
+                <Message
+                  message={{
+                    id: message.id,
+                    content: message.content,
+                    createdAt: message.createdAt,
+                  }}
+                  sender="user"
+                  onFeedback={onFeedback}
+                />
 
-                  {message.sender !== "user" && (
-                    <button
-                      className={`like-btn ${isLiked && "liked"}`}
-                      onClick={() => onFeedback(message.messageId!, chatType)}
-                      title="Mark this response as better"
-                    >
-                      <ThumbsUpIcon
-                        style={{ color: isLiked ? "white" : "black" }}
-                      />
-                    </button>
-                  )}
-                </div>
-              </div>
+                {aiResponse && (
+                  <Message
+                    message={{
+                      id: aiResponse.id,
+                      content: aiResponse.content,
+                      createdAt: message.createdAt,
+                      isLiked: message.feedback?.winnerModel === chatType,
+                    }}
+                    sender={chatType}
+                    onFeedback={onFeedback}
+                  />
+                )}
+              </React.Fragment>
             );
-          })
-        )}
+          })}
 
-        {!isLoadingMessages && isTyping && (
-          <div className="message ai-message">
-            <div className="message-content">
-              <div className="typing-indicator">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-          </div>
-        )}
+        {!isLoadingMessages && isTyping && <TypingIndicator />}
 
         <div ref={messagesEndRef} />
       </div>

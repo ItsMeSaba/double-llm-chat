@@ -1,166 +1,92 @@
-﻿import { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../base/context/AuthProvider";
-import { socketService } from "../../services/socketService";
-import {
-  fetchUserMessages,
-  transformToSocketMessages,
-} from "../../services/chatService";
-import { submitFeedback } from "../../services/feedbackService";
+﻿import { getUserMessages } from "@/services/messages/get-user-messages";
+import { createFeedback } from "@/services/feedback/create-feedback";
+import { isDuplicateMessage } from "./helpers/is-duplicate-message";
+import { scrollIntoView } from "@/base/utils/scroll-into-view";
+import { socketService } from "@/services/socketService";
 import { ChatWindow } from "./components/ChatWindow";
+import { ChatHeader } from "./components/ChatHeader";
+import { useState, useRef, useEffect } from "react";
+import { ChatInput } from "./components/ChatInput";
+import { AIModel } from "@/types/global";
 import "./styles.scss";
-import { isDuplicateMessage } from "./helpers/isDuplicateMessage";
-
-export interface Message {
-  id: string;
-  text: string;
-  sender: "user" | "gpt-4o-mini" | "gemini-1.5-flash";
-  timestamp: Date;
-  messageId?: number;
-}
+import { to } from "@/base/utils/to";
 
 export function DualChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
-  const [inputText, setInputText] = useState("");
-  const [isTypingGPT, setIsTypingGPT] = useState(false);
   const [isTypingGemini, setIsTypingGemini] = useState(false);
-  const messagesEndRefGPT = useRef<HTMLDivElement>(null);
   const messagesEndRefGemini = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [feedbackMap, setFeedbackMap] = useState<Map<number, string>>(
-    new Map()
-  );
+  const messagesEndRefGPT = useRef<HTMLDivElement>(null);
+  const [isTypingGPT, setIsTypingGPT] = useState(false);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputText, setInputText] = useState("");
 
   useEffect(() => {
     loadUserMessages();
   }, []);
 
   const loadUserMessages = async () => {
-    try {
-      setIsLoadingMessages(true);
-      const response = await fetchUserMessages();
-      const transformedMessages = transformToSocketMessages(response.data);
-      setMessages(transformedMessages);
+    const result = await to(() => getUserMessages());
 
-      const newFeedbackMap = new Map<number, string>();
-
-      response.data.forEach((message) => {
-        if (message?.feedback?.winnerModel) {
-          newFeedbackMap.set(message.id, message.feedback.winnerModel);
-        }
-      });
-
-      setFeedbackMap(newFeedbackMap);
-    } catch (error) {
-      console.error("Error loading messages:", error);
-
-      // If no messages exist or there's an error, show default welcome messages
-      setMessages([
-        {
-          id: "welcome-gpt",
-          text: "Hello! I'm GPT-4o-mini. How can I help you today?",
-          sender: "gpt-4o-mini",
-          timestamp: new Date(),
-        },
-        {
-          id: "welcome-gemini",
-          text: "Hi there! I'm Gemini 1.5-flash. Ready to assist you!",
-          sender: "gemini-1.5-flash",
-          timestamp: new Date(),
-        },
-      ]);
-    } finally {
-      setIsLoadingMessages(false);
+    if (!result.ok) {
+      console.error("Error loading messages:", result.error);
+      return;
     }
+
+    setMessages(result.data.data);
+    setIsLoadingMessages(false);
   };
 
-  const scrollToBottom = (ref: React.RefObject<HTMLDivElement | null>) => {
-    ref.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const handleFeedback = async (messageId: number, winnerModel: AIModel) => {
+    const result = await to(() => createFeedback({ messageId, winnerModel }));
 
-  const handleFeedback = async (
-    messageId: number,
-    winnerModel: "gpt-4o-mini" | "gemini-1.5-flash"
-  ) => {
-    try {
-      await submitFeedback({ messageId, winnerModel });
-
-      // Update local feedback state
-      setFeedbackMap((prev) => {
-        const newMap = new Map(prev);
-        newMap.set(messageId, winnerModel);
-        return newMap;
-      });
-
-      console.log(
-        `Feedback submitted: ${winnerModel} is better for message ${messageId}`
-      );
-    } catch (error) {
-      console.error(`Error submitting feedback:`, error);
+    if (!result.ok) {
+      console.error("Error submitting feedback:", result.error);
+      return;
     }
   };
 
   useEffect(() => {
     if (!isLoadingMessages) {
-      scrollToBottom(messagesEndRefGPT);
+      scrollIntoView(messagesEndRefGPT);
+      scrollIntoView(messagesEndRefGemini);
     }
-  }, [
-    messages.filter((m) => m.sender === "gpt-4o-mini" || m.sender === "user"),
-    isLoadingMessages,
-  ]);
+  }, [messages.length, isLoadingMessages]);
 
   useEffect(() => {
-    if (!isLoadingMessages) {
-      scrollToBottom(messagesEndRefGemini);
-    }
-  }, [
-    messages.filter(
-      (m) => m.sender === "gemini-1.5-flash" || m.sender === "user"
-    ),
-    isLoadingMessages,
-  ]);
+    socketService().connect();
 
-  useEffect(() => {
-    socketService.connect();
-
-    socketService.onLLMResponses((data) => {
+    socketService().onLLMResponses((data) => {
       data.responses.forEach((response) => {
-        const aiMessage: Message = {
-          id: `response-${response.messageId}-${response.model}`,
-          text: response.response,
-          sender: response.model as "gpt-4o-mini" | "gemini-1.5-flash",
-          timestamp: new Date(),
-          messageId: response.messageId,
-        };
-
+        // const aiMessage: any = {
+        //   id: `response-${response.messageId}-${response.model}`,
+        //   text: response.response,
+        //   sender: response.model as AIModel,
+        //   timestamp: new Date(),
+        //   messageId: response.messageId,
+        // };
+        // setMessages((prev) => [...prev, aiMessage]);
         // Check if this response already exists to prevent duplicates
-        setMessages((prev) => {
-          if (isDuplicateMessage(aiMessage, prev)) {
-            console.log("Response already exists, skipping duplicate");
-            return prev;
-          }
-
-          return [...prev, aiMessage];
-        });
+        // setMessages((prev) => {
+        //   if (isDuplicateMessage(aiMessage, prev)) {
+        //     console.log("Response already exists, skipping duplicate");
+        //     return prev;
+        //   }
+        //   return [...prev, aiMessage];
+        // });
       });
 
-      // Clear typing indicators
       setIsTypingGPT(false);
       setIsTypingGemini(false);
     });
 
-    socketService.onError((data) => {
+    socketService().onError((data) => {
       console.error("Socket error:", data.message);
       setIsTypingGPT(false);
       setIsTypingGemini(false);
     });
 
-    // Cleanup on unmount
     return () => {
-      socketService.disconnect();
+      socketService().disconnect();
     };
   }, []);
 
@@ -172,14 +98,16 @@ export function DualChatPage() {
     const messageText = inputText.trim();
     setInputText("");
 
-    // Set typing indicators for both models
     setIsTypingGPT(true);
     setIsTypingGemini(true);
 
-    try {
-      socketService.sendMessage(messageText, (data) => {
-        const userMessage: Message = {
-          id: data.messageId.toString(),
+    console.log("sending message dual chat:");
+
+    const result = await to(async () => {
+      socketService().sendMessage(messageText, (data) => {
+        console.log("onAck", data);
+        const userMessage: any = {
+          id: data?.messageId?.toString(),
           text: messageText,
           sender: "user",
           timestamp: new Date(data.timestamp),
@@ -196,98 +124,48 @@ export function DualChatPage() {
           return [...prev, userMessage];
         });
       });
-    } catch (error) {
-      console.error("Error sending message:", error);
-      setIsTypingGPT(false);
-      setIsTypingGemini(false);
+    });
+
+    if (!result.ok) {
+      console.error("Error sending message:", result.error);
     }
-  };
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-
-    try {
-      await logout();
-    } catch (error) {
-      console.error("Logout error:", error);
-    } finally {
-      setIsLoggingOut(false);
-      navigate("/");
-    }
-  };
-
-  const handleStatisticsClick = () => {
-    navigate("/statistics");
-  };
-
-  const getMessagesForChat = (chatType: "gpt-4o-mini" | "gemini-1.5-flash") => {
-    return messages.filter(
-      (message) => message.sender === chatType || message.sender === "user"
-    );
+    setIsTypingGPT(false);
+    setIsTypingGemini(false);
   };
 
   return (
     <div className="dual-chat-container">
-      <div className="dual-chat-header">
-        <h1>Dual LLM Chat</h1>
-        <div className="header-buttons">
-          <button onClick={handleStatisticsClick} className="statistics-btn">
-            Statistics
-          </button>
-          <button
-            onClick={handleLogout}
-            className="logout-btn"
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? "Logging out..." : "Logout"}
-          </button>
-        </div>
-      </div>
+      <ChatHeader />
 
       <div className="chat-windows-container">
         <ChatWindow
-          chatType="gpt-4o-mini"
+          chatType={AIModel.GPT_4O_MINI}
           title="GPT-4o-mini"
           isTyping={isTypingGPT}
           messagesEndRef={messagesEndRefGPT}
-          messages={getMessagesForChat("gpt-4o-mini")}
+          messages={messages}
           isLoadingMessages={isLoadingMessages}
-          feedbackMap={feedbackMap}
           onFeedback={handleFeedback}
         />
 
         <ChatWindow
-          chatType="gemini-1.5-flash"
+          chatType={AIModel.GEMINI_1_5_FLASH}
           title="Gemini 1.5-flash"
           isTyping={isTypingGemini}
           messagesEndRef={messagesEndRefGemini}
-          messages={getMessagesForChat("gemini-1.5-flash")}
+          messages={messages}
           isLoadingMessages={isLoadingMessages}
-          feedbackMap={feedbackMap}
           onFeedback={handleFeedback}
         />
       </div>
 
-      <form onSubmit={handleSendMessage} className="message-input-form">
-        <div className="input-container">
-          <input
-            type="text"
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            placeholder="Type your message to both LLM models..."
-            className="message-input"
-            disabled={isTypingGPT || isTypingGemini}
-          />
-
-          <button
-            type="submit"
-            className="send-btn"
-            disabled={!inputText.trim() || isTypingGPT || isTypingGemini}
-          >
-            Send to Both
-          </button>
-        </div>
-      </form>
+      <ChatInput
+        handleSendMessage={handleSendMessage}
+        inputText={inputText}
+        setInputText={setInputText}
+        isDisabled={isTypingGPT || isTypingGemini}
+      />
     </div>
   );
 }

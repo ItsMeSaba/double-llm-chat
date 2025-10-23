@@ -1,9 +1,12 @@
+import { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
+import { chats, messages, modelResponses } from "../db/schema";
 import { Server as SocketIOServer } from "socket.io";
 import { Server as HTTPServer } from "http";
-import { db } from "../db";
-import { chats, messages, modelResponses } from "../db/schema";
+import { LLMService } from "./llmService";
+import { to } from "@shared/utils/to";
 import { eq } from "drizzle-orm";
-import { LLMService, LLMResponse } from "./llmService";
+import { db } from "../db";
+import jwt from "jsonwebtoken";
 
 interface SocketUser {
   userId: string;
@@ -34,20 +37,48 @@ export class SocketService {
   }
 
   private setupEventHandlers() {
+    this.io.use(async (socket, next) => {
+      const token = socket.handshake.auth?.token as string | undefined;
+      if (!token) return next(new Error("No token provided"));
+
+      const result = await to(async () => {
+        const payload = jwt.verify(token, process.env.JWT_SECRET!) as any;
+
+        console.log("payload", payload);
+
+        socket.data.user = {
+          userId: String(payload.userId),
+          email: payload.email,
+        } satisfies SocketUser;
+
+        next();
+      });
+
+      if (!result.ok) {
+        console.error("Authentication error:", result.error);
+        next(new Error("Authentication failed"));
+      }
+    });
+
     this.io.on("connection", (socket) => {
       console.log(`Socket connected: ${socket.id}`);
 
+      socket.use(([_event, _payload, _ack], next) => {
+        if (!socket.data.user) return next(new Error("Not authenticated"));
+        next();
+      });
+
       socket.on("authenticate", async (userData: SocketUser) => {
-        try {
-          this.userSockets.set(userData.userId, socket.id);
-          socket.data.user = userData;
+        const result = await to(() => {
           console.log(
             `User ${userData.email} authenticated with socket ${socket.id}`
           );
 
           socket.emit("authenticated", { success: true });
-        } catch (error) {
-          console.error("Authentication error:", error);
+        });
+
+        if (!result.ok) {
+          console.error("Authentication error:", result.error);
           socket.emit("authenticated", {
             success: false,
             error: "Authentication failed",
@@ -55,34 +86,43 @@ export class SocketService {
         }
       });
 
-      socket.on("send_message", async (data: ChatMessage) => {
+      socket.on("send_message", async (data: ChatMessage, ack) => {
         try {
           const user = socket.data.user as SocketUser;
+
           if (!user) {
-            socket.emit("error", { message: "User not authenticated" });
-            return;
+            return ack?.({ error: "User not authenticated" });
           }
 
-          const chat = await this.getOrCreateChat(parseInt(user.userId));
+          console.log("user", user);
 
+          const chat = await this.getOrCreateChat(parseInt(user.userId));
           const savedMessage = await this.saveMessage(
             chat.id,
             "user",
             data.message
           );
 
-          socket.emit("message_received", {
-            messageId: savedMessage.id,
-            chatId: chat.id,
+          console.log("passed saved message");
+          const llmResponses = await this.processWithLLMs(
+            savedMessage.id,
+            data.message
+          );
+
+          const messageWithLLMResponses: MessageWithLLMResponsesDTO = {
+            id: savedMessage.id,
             content: savedMessage.content,
             sender: savedMessage.sender,
-            timestamp: savedMessage.createdAt,
-          });
+            createdAt: savedMessage.createdAt,
+            responses: llmResponses,
+          };
 
-          await this.processWithLLMs(savedMessage.id, data.message, socket);
+          ack?.({
+            messageWithLLMResponses,
+          });
         } catch (error) {
           console.error("Error processing message:", error);
-          socket.emit("error", { message: "Failed to process message" });
+          ack?.({ error: "Failed to process message" });
         }
       });
 
@@ -133,13 +173,12 @@ export class SocketService {
     return savedMessage[0];
   }
 
-  private async processWithLLMs(
-    messageId: number,
-    userMessage: string,
-    socket: any
-  ) {
+  private async processWithLLMs(messageId: number, userMessage: string) {
     try {
-      const llmResponses = await this.callLLMs(userMessage, messageId);
+      const llmResponses = await this.llmService.callAllLLMs(
+        userMessage,
+        messageId
+      );
 
       for (const response of llmResponses) {
         await this.saveLLMResponse(
@@ -149,21 +188,11 @@ export class SocketService {
         );
       }
 
-      socket.emit("llm_responses", {
-        messageId,
-        responses: llmResponses,
-      });
+      return llmResponses;
     } catch (error) {
       console.error("Error processing with LLMs:", error);
-      socket.emit("error", { message: "Failed to get LLM responses" });
+      return [];
     }
-  }
-
-  private async callLLMs(
-    userMessage: string,
-    messageId: number
-  ): Promise<LLMResponse[]> {
-    return await this.llmService.callAllLLMs(userMessage, messageId);
   }
 
   private async saveLLMResponse(

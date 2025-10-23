@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { http } from "../http";
 
 export interface FeedbackRequest {
   messageId: number;
@@ -14,7 +14,7 @@ export interface FeedbackResponse {
   };
 }
 
-export async function submitFeedback(
+export async function createFeedback(
   feedback: FeedbackRequest
 ): Promise<FeedbackResponse> {
   const response = await http("/chat/feedback", {

@@ -1,4 +1,4 @@
-import { http } from "./http";
+import { AIModel } from "../types/global";
 
 export interface ModelResponse {
   id: number;
@@ -27,31 +27,9 @@ export interface FetchMessagesResponse {
 export interface DualChatMessage {
   id: string;
   text: string;
-  sender: "user" | "gpt-4o-mini" | "gemini-1.5-flash";
+  sender: "user" | AIModel;
   timestamp: Date;
   messageId?: number;
-}
-
-export async function fetchUserMessages(): Promise<FetchMessagesResponse> {
-  const response = await http("/chat/messages", {
-    method: "GET",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch messages: ${response.status}`);
-  }
-
-  const data = await response.json();
-
-  // Convert date strings back to Date objects
-  data.data.forEach((message: MessageWithResponses) => {
-    message.createdAt = new Date(message.createdAt);
-    message.responses.forEach((response: ModelResponse) => {
-      response.createdAt = new Date(response.createdAt);
-    });
-  });
-
-  return data;
 }
 
 export function transformToSocketMessages(
@@ -74,13 +52,13 @@ export function transformToSocketMessages(
     // Add model responses
     message.responses.forEach((response) => {
       if (
-        response.model === "gpt-4o-mini" ||
-        response.model === "gemini-1.5-flash"
+        response.model === AIModel.GPT_4O_MINI ||
+        response.model === AIModel.GEMINI_1_5_FLASH
       ) {
         result.push({
           id: `${message.id}-${response.id}`,
           text: response.content,
-          sender: response.model as "gpt-4o-mini" | "gemini-1.5-flash",
+          sender: response.model as AIModel,
           timestamp: response.createdAt,
           messageId: message.id,
         });

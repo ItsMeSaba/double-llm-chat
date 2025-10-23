@@ -1,8 +1,11 @@
-﻿import { Router, Request, Response } from "express";
+﻿import { getOrCreateChat } from "../base/helpers/chat/get-or-create-chat";
+import { messageAdapter } from "../base/adapters/messages.adapter";
+import { messages, modelResponses, feedback } from "../db/schema";
+import { Router, Request, Response } from "express";
+import { eq, asc, count, and } from "drizzle-orm";
+import { alias } from "drizzle-orm/sqlite-core";
 import { db } from "../db";
-import { chats, messages, modelResponses, feedback } from "../db/schema";
-import { eq, asc, count, sql } from "drizzle-orm";
-import { getOrCreateChat } from "../base/helpers/chat/get-or-create-chat";
+import { AIModel } from "@shared/types/global";
 
 const router = Router();
 
@@ -23,6 +26,9 @@ router.get("/messages", async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Failed to retrieve chat" });
     }
 
+    const gptResponse = alias(modelResponses, "gpt_response");
+    const geminiResponse = alias(modelResponses, "gemini_response");
+
     // Fetch messages with their model responses and feedback
     const messagesWithResponses = await db
       .select({
@@ -30,62 +36,39 @@ router.get("/messages", async (req: Request, res: Response) => {
         messageContent: messages.content,
         messageSender: messages.sender,
         messageCreatedAt: messages.createdAt,
-        responseId: modelResponses.id,
-        responseModel: modelResponses.model,
-        responseContent: modelResponses.response,
-        responseCreatedAt: modelResponses.createdAt,
+        gptResponseId: gptResponse.id,
+        gptResponseContent: gptResponse.response,
+        geminiResponseId: geminiResponse.id,
+        geminiResponseContent: geminiResponse.response,
         feedbackId: feedback.id,
         winnerModel: feedback.winnerModel,
       })
       .from(messages)
-      .leftJoin(modelResponses, eq(messages.id, modelResponses.messageId))
+      .fullJoin(
+        gptResponse,
+        and(
+          eq(messages.id, gptResponse.messageId),
+          eq(gptResponse.model, AIModel.GPT_4O_MINI)
+        )
+      )
+      .fullJoin(
+        geminiResponse,
+        and(
+          eq(messages.id, geminiResponse.messageId),
+          eq(geminiResponse.model, AIModel.GEMINI_1_5_FLASH)
+        )
+      )
       .leftJoin(feedback, eq(messages.id, feedback.messageId))
       .where(eq(messages.chatId, chat.id))
-      .orderBy(asc(messages.createdAt), asc(modelResponses.createdAt));
+      .orderBy(asc(messages.createdAt));
 
-    // Group messages with their responses
-    const messageMap = new Map();
-
-    messagesWithResponses.forEach((row) => {
-      const messageId = row.messageId;
-      if (!messageMap.has(messageId)) {
-        messageMap.set(messageId, {
-          id: messageId,
-          content: row.messageContent,
-          sender: row.messageSender,
-          createdAt: row.messageCreatedAt,
-          responses: [],
-          feedback: null,
-        });
-      }
-
-      if (row.responseId) {
-        const existingResponse = messageMap
-          .get(messageId)
-          .responses.find((r: any) => r.id === row.responseId);
-        if (!existingResponse) {
-          messageMap.get(messageId).responses.push({
-            id: row.responseId,
-            model: row.responseModel,
-            content: row.responseContent,
-            createdAt: row.responseCreatedAt,
-          });
-        }
-      }
-
-      if (row.feedbackId && !messageMap.get(messageId).feedback) {
-        messageMap.get(messageId).feedback = {
-          id: row.feedbackId,
-          winnerModel: row.winnerModel,
-        };
-      }
-    });
-
-    const groupedMessages = Array.from(messageMap.values());
+    const formattedMessages = messagesWithResponses.map((message) =>
+      messageAdapter(message)
+    );
 
     return res.status(200).json({
       success: true,
-      data: groupedMessages,
+      data: formattedMessages,
     });
   } catch (error) {
     console.error("Error fetching messages:", error);
