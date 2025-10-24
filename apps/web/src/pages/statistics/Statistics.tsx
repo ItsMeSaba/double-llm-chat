@@ -19,7 +19,8 @@ import { useState, useEffect } from "react";
 import { Cards } from "./components/Cards";
 import { Error } from "./components/Error";
 import { to } from "@/base/utils/to";
-import "./styles.scss";
+
+import styles from "./styles.module.scss";
 
 const COLORS = ["#667eea", "#764ba2"];
 
@@ -63,10 +64,10 @@ export function StatisticsPage() {
   }
 
   return (
-    <div className="statistics-page">
-      <div className="statistics-container">
-        <div className="header-section">
-          <button onClick={handleBackClick} className="back-button">
+    <div className={styles.statisticsPage}>
+      <div className={styles.statisticsContainer}>
+        <div className={styles.headerSection}>
+          <button onClick={handleBackClick} className={styles.backButton}>
             Back to Chat
           </button>
 
@@ -74,11 +75,11 @@ export function StatisticsPage() {
         </div>
 
         {statistics && (
-          <div className="statistics-content">
-            <div className="chart-section">
+          <div className={styles.statisticsContent}>
+            <div className={styles.chartSection}>
               <h2>Model Preference Distribution</h2>
 
-              <div className="chart-container">
+              <div className={styles.chartContainer}>
                 <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
                     <Pie
@@ -116,7 +117,7 @@ export function StatisticsPage() {
             />
 
             {statistics.totalFeedback === 0 && (
-              <div className="no-data-section">
+              <div className={styles.noDataSection}>
                 <h2>No Data Available</h2>
 
                 <p>

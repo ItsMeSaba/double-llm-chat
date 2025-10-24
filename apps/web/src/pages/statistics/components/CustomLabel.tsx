@@ -1,12 +1,3 @@
-interface Props {
-  cx: number;
-  cy: number;
-  midAngle: number;
-  innerRadius: number;
-  outerRadius: number;
-  percent: number;
-}
-
 export function CustomLabel({
   cx,
   cy,
