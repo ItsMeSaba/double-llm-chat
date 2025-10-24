@@ -51,7 +51,7 @@ export const modelResponses = sqliteTable("model_responses", {
     .notNull()
     .references(() => messages.id),
   model: text("model").notNull(), // "gpt-4o-mini" | "gemini-1.5-flash"
-  response: text("response").notNull(),
+  content: text("content").notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .default(sql`(strftime('%s','now'))`)
     .notNull(),

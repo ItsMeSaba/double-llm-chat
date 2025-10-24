@@ -37,9 +37,9 @@ router.get("/messages", async (req: Request, res: Response) => {
         messageSender: messages.sender,
         messageCreatedAt: messages.createdAt,
         gptResponseId: gptResponse.id,
-        gptResponseContent: gptResponse.response,
+        gptResponseContent: gptResponse.content,
         geminiResponseId: geminiResponse.id,
-        geminiResponseContent: geminiResponse.response,
+        geminiResponseContent: geminiResponse.content,
         feedbackId: feedback.id,
         winnerModel: feedback.winnerModel,
       })
@@ -62,9 +62,9 @@ router.get("/messages", async (req: Request, res: Response) => {
       .where(eq(messages.chatId, chat.id))
       .orderBy(asc(messages.createdAt));
 
-    const formattedMessages = messagesWithResponses.map((message) =>
-      messageAdapter(message)
-    );
+    console.log("messagesWithResponses", messagesWithResponses);
+
+    const formattedMessages = messagesWithResponses.map(messageAdapter);
 
     return res.status(200).json({
       success: true,

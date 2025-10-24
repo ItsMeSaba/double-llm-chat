@@ -1,8 +1,9 @@
+import type { AIModel } from "@shared/types/global";
 import { http } from "../http";
 
 export interface FeedbackRequest {
   messageId: number;
-  winnerModel: "gpt-4o-mini" | "gemini-1.5-flash";
+  winnerModel: AIModel;
 }
 
 export interface FeedbackResponse {

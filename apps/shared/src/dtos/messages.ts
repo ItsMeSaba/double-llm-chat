@@ -1,4 +1,4 @@
-import { LLMResponse } from "@shared/types/global";
+import type { LLMResponse } from "../types/global";
 
 export interface MessageWithLLMResponsesDTO {
   id: number;

@@ -1,4 +1,5 @@
 import { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
+import { AIModel } from "@shared/types/global";
 
 interface Props {
   messageId?: number | null;
@@ -13,22 +14,6 @@ interface Props {
   winnerModel?: string | null;
 }
 
-// interface FormattedMessage {
-//   id: number;
-//   content: string;
-//   sender: string;
-//   createdAt: Date;
-//   responses: {
-//     id: number;
-//     model: string;
-//     content: string;
-//   }[];
-//   feedback: {
-//     id: number;
-//     winnerModel: string;
-//   } | null;
-// }
-
 export function messageAdapter(props: Props): MessageWithLLMResponsesDTO {
   return {
     id: props.messageId!,
@@ -38,12 +23,12 @@ export function messageAdapter(props: Props): MessageWithLLMResponsesDTO {
     responses: [
       {
         id: props.gptResponseId!,
-        model: "gpt-4o-mini",
+        model: AIModel.GPT_4O_MINI,
         content: props.gptResponseContent!,
       },
       {
         id: props.geminiResponseId!,
-        model: "gemini-1.5-flash",
+        model: AIModel.GEMINI_1_5_FLASH,
         content: props.geminiResponseContent!,
       },
     ],

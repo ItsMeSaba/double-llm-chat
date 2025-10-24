@@ -5,6 +5,6 @@ export enum AIModel {
 
 export type LLMResponse = {
   model: AIModel;
-  response: string;
-  messageId: number;
+  content: string;
+  id: number;
 };

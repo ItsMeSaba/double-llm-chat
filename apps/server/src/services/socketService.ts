@@ -181,11 +181,7 @@ export class SocketService {
       );
 
       for (const response of llmResponses) {
-        await this.saveLLMResponse(
-          messageId,
-          response.model,
-          response.response
-        );
+        await this.saveLLMResponse(messageId, response.model, response.content);
       }
 
       return llmResponses;
@@ -198,12 +194,12 @@ export class SocketService {
   private async saveLLMResponse(
     messageId: number,
     model: string,
-    response: string
+    content: string
   ) {
     await db.insert(modelResponses).values({
       messageId,
       model,
-      response,
+      content,
     });
   }
 

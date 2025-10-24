@@ -1,8 +1,9 @@
 ﻿import React from "react";
 
-import type { AIModel } from "../../../types/global";
-import { Message } from "./Message";
 import { TypingIndicator } from "@/components/modules/typing-indicator/TypingIndicator";
+import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
+import type { AIModel } from "@shared/types/global";
+import { Message } from "./Message";
 
 export interface FormattedMessage {
   id: number;
@@ -25,7 +26,7 @@ interface ChatWindowProps {
   title: string;
   isTyping: boolean;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  messages: FormattedMessage[];
+  messages: MessageWithLLMResponsesDTO[];
   isLoadingMessages: boolean;
   onFeedback: (messageId: number, winnerModel: AIModel) => void;
 }
@@ -39,7 +40,8 @@ export function ChatWindow({
   isLoadingMessages,
   onFeedback,
 }: ChatWindowProps) {
-  const getAiResponse = (message: FormattedMessage) => {
+  console.log("messages", chatType, messages);
+  const getAiResponse = (message: MessageWithLLMResponsesDTO) => {
     return message?.responses?.find((response) => response.model === chatType);
   };
 

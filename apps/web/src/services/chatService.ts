@@ -18,11 +18,6 @@ export interface MessageWithResponses {
   };
 }
 
-export interface FetchMessagesResponse {
-  success: boolean;
-  data: MessageWithResponses[];
-}
-
 // Message interface expected by DualChatPage
 export interface DualChatMessage {
   id: string;

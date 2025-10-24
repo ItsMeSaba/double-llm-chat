@@ -1,6 +1,7 @@
 // services/socketService.ts
 import { io, Socket } from "socket.io-client";
 import { getAccessToken } from "./http";
+import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
 
 type SocketMessage = {
   messageId: number;
@@ -90,7 +91,12 @@ export class SocketService {
     this.isConnected = false;
   }
 
-  sendMessage(message: string, onAck?: (data: SocketMessage) => void) {
+  sendMessage(
+    message: string,
+    onAck?: (data: {
+      messageWithLLMResponses: MessageWithLLMResponsesDTO;
+    }) => void
+  ) {
     if (!this.socket || !this.isConnected) {
       console.error("Socket not connected");
       return;
@@ -98,15 +104,13 @@ export class SocketService {
 
     console.log("Sending message socketService front:", message);
 
-    this.socket.emit("send_message", { message }, (ack?: SocketMessage) => {
-      if (ack && onAck) onAck(ack);
-    });
-  }
-
-  onLLMResponses(cb: (data: LLMResponsesEvent) => void) {
-    if (!this.socket) return () => {};
-    this.socket.on("llm_responses", cb);
-    return () => this.socket?.off("llm_responses", cb);
+    this.socket.emit(
+      "send_message",
+      { message },
+      (ack?: { messageWithLLMResponses: MessageWithLLMResponsesDTO }) => {
+        if (ack && onAck) onAck(ack);
+      }
+    );
   }
 
   onError(cb: (data: { message: string }) => void) {

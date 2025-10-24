@@ -1,7 +1,12 @@
-import type { FetchMessagesResponse } from "../chatService";
+import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
 import { http } from "../http";
 
-export async function getUserMessages(): Promise<FetchMessagesResponse> {
+export interface Response {
+  success: boolean;
+  data: MessageWithLLMResponsesDTO[];
+}
+
+export async function getUserMessages(): Promise<Response> {
   const response = await http("/chat/messages", {
     method: "GET",
   });

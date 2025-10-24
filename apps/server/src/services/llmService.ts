@@ -105,11 +105,11 @@ export class LLMService {
       const model = calls[i].model;
 
       if (res.status === "fulfilled") {
-        return { model, response: res.value, messageId };
+        return { model, content: res.value, id: messageId };
       }
 
       console.error(`${model} failed:`, res.reason);
-      return { model, response: FALLBACK_MSG, messageId };
+      return { model, content: FALLBACK_MSG, id: messageId };
     });
   }
 }

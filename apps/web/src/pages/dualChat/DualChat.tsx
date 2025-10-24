@@ -1,15 +1,15 @@
-﻿import { getUserMessages } from "@/services/messages/get-user-messages";
+﻿import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
+import { getUserMessages } from "@/services/messages/get-user-messages";
 import { createFeedback } from "@/services/feedback/create-feedback";
-import { isDuplicateMessage } from "./helpers/is-duplicate-message";
 import { scrollIntoView } from "@/base/utils/scroll-into-view";
 import { socketService } from "@/services/socketService";
 import { ChatWindow } from "./components/ChatWindow";
 import { ChatHeader } from "./components/ChatHeader";
 import { useState, useRef, useEffect } from "react";
 import { ChatInput } from "./components/ChatInput";
-import { AIModel } from "@/types/global";
-import "./styles.scss";
 import { to } from "@/base/utils/to";
+import "./styles.scss";
+import { AIModel } from "@shared/types/global";
 
 export function DualChatPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
@@ -22,6 +22,20 @@ export function DualChatPage() {
 
   useEffect(() => {
     loadUserMessages();
+
+    socketService().connect();
+
+    socketService().onConnect(() => {
+      console.log("Socket connected");
+    });
+
+    socketService().onDisconnect(() => {
+      console.log("Socket disconnected");
+    });
+
+    return () => {
+      socketService().disconnect();
+    };
   }, []);
 
   const loadUserMessages = async () => {
@@ -32,6 +46,7 @@ export function DualChatPage() {
       return;
     }
 
+    console.log("result.data.data", result.data.data);
     setMessages(result.data.data);
     setIsLoadingMessages(false);
   };
@@ -52,44 +67,6 @@ export function DualChatPage() {
     }
   }, [messages.length, isLoadingMessages]);
 
-  useEffect(() => {
-    socketService().connect();
-
-    socketService().onLLMResponses((data) => {
-      data.responses.forEach((response) => {
-        // const aiMessage: any = {
-        //   id: `response-${response.messageId}-${response.model}`,
-        //   text: response.response,
-        //   sender: response.model as AIModel,
-        //   timestamp: new Date(),
-        //   messageId: response.messageId,
-        // };
-        // setMessages((prev) => [...prev, aiMessage]);
-        // Check if this response already exists to prevent duplicates
-        // setMessages((prev) => {
-        //   if (isDuplicateMessage(aiMessage, prev)) {
-        //     console.log("Response already exists, skipping duplicate");
-        //     return prev;
-        //   }
-        //   return [...prev, aiMessage];
-        // });
-      });
-
-      setIsTypingGPT(false);
-      setIsTypingGemini(false);
-    });
-
-    socketService().onError((data) => {
-      console.error("Socket error:", data.message);
-      setIsTypingGPT(false);
-      setIsTypingGemini(false);
-    });
-
-    return () => {
-      socketService().disconnect();
-    };
-  }, []);
-
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -101,28 +78,14 @@ export function DualChatPage() {
     setIsTypingGPT(true);
     setIsTypingGemini(true);
 
-    console.log("sending message dual chat:");
-
     const result = await to(async () => {
       socketService().sendMessage(messageText, (data) => {
         console.log("onAck", data);
-        const userMessage: any = {
-          id: data?.messageId?.toString(),
-          text: messageText,
-          sender: "user",
-          timestamp: new Date(data.timestamp),
-          messageId: data.messageId,
-        };
 
-        setMessages((prev) => {
-          if (isDuplicateMessage(userMessage, prev)) {
-            // Used to resolve weird message duplication as temporary workaround solution
-            console.log("User message already exists, skipping duplicate");
-            return prev;
-          }
+        const userMessage =
+          data.messageWithLLMResponses as MessageWithLLMResponsesDTO;
 
-          return [...prev, userMessage];
-        });
+        setMessages((prev) => [...prev, userMessage]);
       });
     });
 
