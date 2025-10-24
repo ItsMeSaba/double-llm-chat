@@ -1,6 +1,7 @@
 ﻿import OpenAI from "openai";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+
 import { AIModel, LLMResponse } from "@shared/types/global";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { to } from "@shared/utils/to";
 
 const FALLBACK_MSG =

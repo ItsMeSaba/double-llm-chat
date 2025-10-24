@@ -1,4 +1,4 @@
-export async function refreshToken(signal?: AbortSignal) {
+export async function refreshTheToken(signal?: AbortSignal) {
   const res = await fetch(import.meta.env.VITE_SERVER_URL + "/auth/refresh", {
     method: "POST",
     credentials: "include",

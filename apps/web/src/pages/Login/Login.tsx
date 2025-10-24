@@ -1,10 +1,11 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../base/context/AuthProvider";
 import { validateForm } from "./helpers/validate-form";
 import { login, register } from "../../services/auth";
 import { setAccessToken } from "../../services/http";
-import { useAuth } from "../../base/context/AuthProvider";
+import { useNavigate } from "react-router-dom";
 import { Navigate } from "react-router-dom";
+import { to } from "@/base/utils/to";
+import { useState } from "react";
 import "./styles.scss";
 
 export interface FormData {
@@ -14,16 +15,16 @@ export interface FormData {
 }
 
 export function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const { isAuthed, loading: isAuthLoading } = useAuth();
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
-  const { isAuthed, loading: isAuthLoading } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -41,41 +42,44 @@ export function LoginPage() {
       return;
     }
 
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setErrors(["Passwords do not match"]);
+      return;
+    }
+
     setIsLoading(true);
     setErrors([]);
 
-    try {
-      if (isLogin) {
-        const loginResult = await login({
-          email: formData.email,
-          password: formData.password,
-        });
+    const action = isLogin ? login : register;
 
-        if (loginResult.success && loginResult.accessToken) {
-          setAccessToken(loginResult.accessToken);
-          navigate("/dual-chat");
-        } else {
-          setErrors([loginResult.error || "Login failed"]);
-        }
-      } else {
-        const registerResult = await register({
+    const payload = isLogin
+      ? { email: formData.email, password: formData.password }
+      : {
           email: formData.email,
           password: formData.password,
           repeatPassword: formData.confirmPassword!,
-        });
+        };
 
-        if (registerResult.success && registerResult.accessToken) {
-          setAccessToken(registerResult.accessToken);
-          navigate("/dual-chat");
-        } else {
-          setErrors([registerResult.error || "Registration failed"]);
-        }
-      }
-    } catch (error) {
-      setErrors(["An error occurred. Please try again."]);
-    } finally {
+    const fallbackMsg = isLogin ? "Login failed" : "Registration failed";
+
+    const result = await to(() => action(payload as any));
+
+    if (!result.ok) {
+      setErrors([String(result.error) || fallbackMsg]);
       setIsLoading(false);
+      return;
     }
+
+    const { success, accessToken, error } = result.data;
+
+    if (success && accessToken) {
+      setAccessToken(accessToken);
+      navigate("/dual-chat");
+    } else {
+      setErrors([error ?? fallbackMsg]);
+    }
+
+    setIsLoading(false);
   };
 
   const toggleMode = () => {
@@ -92,6 +96,7 @@ export function LoginPage() {
     <div className="login-container">
       <div className="login-card">
         <h1>{isLogin ? "Welcome Back" : "Create Account"}</h1>
+
         <p className="subtitle">
           {isLogin ? "Sign in to your account" : "Sign up for a new account"}
         </p>
@@ -165,6 +170,7 @@ export function LoginPage() {
         <div className="toggle-mode">
           <p>
             {isLogin ? "Don't have an account? " : "Already have an account? "}
+
             <button
               type="button"
               onClick={toggleMode}

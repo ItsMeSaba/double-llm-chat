@@ -3,11 +3,11 @@ import { getAccessToken } from "../services/http";
 import { Navigate } from "react-router-dom";
 import type { ReactNode } from "react";
 
-interface ProtectedRouteProps {
+interface Props {
   children: ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ProtectedRoute({ children }: Props) {
   const accessToken = getAccessToken();
   const { loading } = useAuth();
 

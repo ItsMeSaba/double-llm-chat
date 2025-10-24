@@ -6,9 +6,10 @@ import {
   useMemo,
   useRef,
 } from "react";
+import { refreshTheToken } from "../../services/auth/refresh-token";
 import { serverLogout } from "../../services/auth/server-logout";
-import { refreshToken } from "../../services/auth/refresh-token";
 import { setAccessToken } from "../../services/http";
+import { to } from "../utils/to";
 
 type AuthCtx = {
   isAuthed: boolean;
@@ -30,17 +31,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const controller = new AbortController();
 
     async function getRefreshToken() {
-      try {
-        const newRefreshToken = await refreshToken(controller.signal);
+      const result = await to(() => refreshTheToken(controller.signal));
 
-        if (newRefreshToken) {
-          setAccessToken(newRefreshToken);
-          setAuthed(true);
-        }
-      } catch (e) {
-      } finally {
-        setLoading(false);
+      if (!result.ok) {
+        return console.error("Error refreshing token:", result.error);
       }
+
+      const newRefreshToken = result.data;
+
+      if (newRefreshToken) {
+        setAccessToken(newRefreshToken);
+        setAuthed(true);
+      }
+
+      setLoading(false);
     }
 
     getRefreshToken();

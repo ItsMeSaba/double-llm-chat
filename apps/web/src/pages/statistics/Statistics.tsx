@@ -7,11 +7,6 @@ import {
   ResponsiveContainer,
   Legend,
   Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
 } from "recharts";
 import {
   fetchStatistics,
@@ -78,14 +73,6 @@ export const StatisticsPage: React.FC = () => {
         {`${(percent * 100).toFixed(0)}%`}
       </text>
     );
-  };
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
   };
 
   if (loading) {
