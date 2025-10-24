@@ -2,14 +2,14 @@
 import ThumbsUpIcon from "../../../assets/thumbs-up.svg?react";
 
 import { formatMessageTime } from "@/base/utils/format-message-time";
-import type { AIModel } from "@/types/global";
+import type { AIModel } from "@shared/types/global";
 
 interface Props {
   message: {
-    id: number;
-    content: string;
-    createdAt: Date;
     isLiked?: boolean;
+    createdAt: Date;
+    content: string;
+    id: number;
   };
   sender: "user" | AIModel;
   onFeedback: (messageId: number, winnerModel: AIModel) => void;

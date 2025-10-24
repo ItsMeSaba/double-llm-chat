@@ -1,117 +1,64 @@
-﻿import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  PieChart,
-  Pie,
-  Cell,
+﻿import {
   ResponsiveContainer,
-  Legend,
+  PieChart,
   Tooltip,
+  Legend,
+  Cell,
+  Pie,
 } from "recharts";
+
 import {
-  fetchStatistics,
   type StatisticsResponse,
-} from "../../services/statisticsService";
+  fetchStatistics,
+} from "@/services/statisticsService";
+
+import { CustomLabel } from "./components/CustomLabel";
+import { Loading } from "./components/Loading";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Cards } from "./components/Cards";
+import { Error } from "./components/Error";
+import { to } from "@/base/utils/to";
 import "./styles.scss";
 
 const COLORS = ["#667eea", "#764ba2"];
 
-export const StatisticsPage: React.FC = () => {
-  const navigate = useNavigate();
+export function StatisticsPage() {
   const [statistics, setStatistics] = useState<StatisticsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadStatistics();
   }, []);
 
   const loadStatistics = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await fetchStatistics();
-      setStatistics(response.data);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load statistics"
-      );
-    } finally {
+    setLoading(true);
+    setError(null);
+    const result = await to(() => fetchStatistics());
+
+    if (!result.ok) {
+      setError(String(result.error) || "Failed to load statistics");
       setLoading(false);
+      return;
     }
+
+    setStatistics(result.data.data);
+    setLoading(false);
   };
 
   const handleBackClick = () => {
     navigate("/dual-chat");
   };
 
-  const renderCustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-  }: any) => {
-    if (percent === 0) return null;
-
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        fontSize={14}
-        fontWeight="bold"
-      >
-        {`${(percent * 100).toFixed(0)}%`}
-      </text>
-    );
-  };
-
   if (loading) {
-    return (
-      <div className="statistics-page">
-        <div className="statistics-container">
-          <div className="header-section">
-            <button onClick={handleBackClick} className="back-button">
-              Back to Chat
-            </button>
-            <h1>Statistics Dashboard</h1>
-          </div>
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Loading statistics...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading onBack={handleBackClick} />;
   }
 
   if (error) {
     return (
-      <div className="statistics-page">
-        <div className="statistics-container">
-          <div className="header-section">
-            <button onClick={handleBackClick} className="back-button">
-              Back to Chat
-            </button>
-            <h1>Statistics Dashboard</h1>
-          </div>
-          <div className="error-container">
-            <p className="error-message">{error}</p>
-            <button onClick={loadStatistics} className="retry-button">
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
+      <Error onRetry={loadStatistics} onBack={handleBackClick} error={error} />
     );
   }
 
@@ -122,6 +69,7 @@ export const StatisticsPage: React.FC = () => {
           <button onClick={handleBackClick} className="back-button">
             Back to Chat
           </button>
+
           <h1>Statistics Dashboard</h1>
         </div>
 
@@ -129,6 +77,7 @@ export const StatisticsPage: React.FC = () => {
           <div className="statistics-content">
             <div className="chart-section">
               <h2>Model Preference Distribution</h2>
+
               <div className="chart-container">
                 <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
@@ -137,7 +86,7 @@ export const StatisticsPage: React.FC = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={renderCustomLabel}
+                      label={CustomLabel}
                       outerRadius={120}
                       fill="#8884d8"
                       dataKey="value"
@@ -149,6 +98,7 @@ export const StatisticsPage: React.FC = () => {
                         />
                       ))}
                     </Pie>
+
                     <Tooltip
                       formatter={(value: number) => [`${value} likes`, "Count"]}
                       labelFormatter={(label: string) => `Model: ${label}`}
@@ -159,30 +109,16 @@ export const StatisticsPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="summary-section">
-              <h2>Summary</h2>
-              <div className="summary-cards">
-                <div className="summary-card gpt-card">
-                  <h3>GPT-4o Mini</h3>
-                  <div className="count">{statistics.summary.gptLikes}</div>
-                  <div className="label">Likes</div>
-                </div>
-                <div className="summary-card gemini-card">
-                  <h3>Gemini 1.5 Flash</h3>
-                  <div className="count">{statistics.summary.geminiLikes}</div>
-                  <div className="label">Likes</div>
-                </div>
-                <div className="summary-card total-card">
-                  <h3>Total Feedback</h3>
-                  <div className="count">{statistics.totalFeedback}</div>
-                  <div className="label">Messages</div>
-                </div>
-              </div>
-            </div>
+            <Cards
+              gptLikes={statistics.summary.gptLikes}
+              geminiLikes={statistics.summary.geminiLikes}
+              totalFeedback={statistics.totalFeedback}
+            />
 
             {statistics.totalFeedback === 0 && (
               <div className="no-data-section">
                 <h2>No Data Available</h2>
+
                 <p>
                   You haven't provided feedback on any messages yet. Start
                   chatting and like responses to see statistics here!
@@ -194,4 +130,4 @@ export const StatisticsPage: React.FC = () => {
       </div>
     </div>
   );
-};
+}

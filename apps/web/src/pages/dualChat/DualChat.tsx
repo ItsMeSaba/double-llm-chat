@@ -46,7 +46,6 @@ export function DualChatPage() {
       return;
     }
 
-    console.log("result.data.data", result.data.data);
     setMessages(result.data.data);
     setIsLoadingMessages(false);
   };
