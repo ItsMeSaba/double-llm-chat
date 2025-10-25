@@ -20,7 +20,7 @@ export function Message({ message, sender, onFeedback }: Props) {
 
   return (
     <div
-      key={message.id}
+      key={`${message.id}-${sender}`}
       className={`message ${sender === "user" ? "user-message" : "ai-message"}`}
     >
       <div className="message-content">

@@ -80,8 +80,10 @@ export class SocketService {
   connect() {
     if (!this.socket) this.setupSocket();
     if (this.isConnected) return;
+
     // attach latest token on each connect attempt
     const token = getAccessToken();
+
     if (token && this.socket) this.socket.auth = { token };
     this.socket?.connect();
   }

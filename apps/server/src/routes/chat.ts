@@ -62,8 +62,6 @@ router.get("/messages", async (req: Request, res: Response) => {
       .where(eq(messages.chatId, chat.id))
       .orderBy(asc(messages.createdAt));
 
-    console.log("messagesWithResponses", messagesWithResponses);
-
     const formattedMessages = messagesWithResponses.map(messageAdapter);
 
     return res.status(200).json({
@@ -139,6 +137,10 @@ router.post("/feedback", async (req: Request, res: Response) => {
     const { messageId, winnerModel } = req.body;
     const user = req.user;
 
+    console.log("user", user);
+    console.log("messageId", messageId);
+    console.log("winnerModel", winnerModel);
+
     if (!user) {
       return res.status(401).json({ error: "User not authenticated" });
     }
@@ -149,22 +151,25 @@ router.post("/feedback", async (req: Request, res: Response) => {
       });
     }
 
-    if (!["gpt-4o-mini", "gemini-1.5-flash"].includes(winnerModel)) {
+    if (
+      ![AIModel.GPT_4O_MINI, AIModel.GEMINI_1_5_FLASH].includes(winnerModel)
+    ) {
       return res.status(400).json({
         error:
           "Invalid winner model. Must be 'gpt-4o-mini' or 'gemini-1.5-flash'",
       });
     }
 
-    // Check if feedback already exists for this message
     const existingFeedback = await db
       .select()
       .from(feedback)
       .where(eq(feedback.messageId, messageId))
       .limit(1);
 
+    console.log("passed check");
+
     if (existingFeedback.length > 0) {
-      // Update existing feedback
+      console.log("exists");
       await db
         .update(feedback)
         .set({
@@ -173,12 +178,14 @@ router.post("/feedback", async (req: Request, res: Response) => {
         })
         .where(eq(feedback.messageId, messageId));
     } else {
-      // Create new feedback
+      console.log("new");
       await db.insert(feedback).values({
         messageId,
         winnerModel,
       });
     }
+
+    console.log("passed update");
 
     return res.status(200).json({
       success: true,

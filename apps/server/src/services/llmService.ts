@@ -57,7 +57,6 @@ export class LLMService {
       throw new Error("Failed to get response from GPT-4o-mini");
     }
 
-    console.log("result.data openai", result.data);
     return result.data;
   }
 
@@ -68,11 +67,9 @@ export class LLMService {
       });
 
       const result = await model.generateContent(message);
-      console.log("result", result);
 
       const response = await result.response;
 
-      console.log("response.text()", response.text());
       return normalizeText(response.text());
     });
 
@@ -81,7 +78,6 @@ export class LLMService {
       throw new Error(`${result.error}`);
     }
 
-    console.log("result.data gemini", result.data);
     return result.data;
   }
 

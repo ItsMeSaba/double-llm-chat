@@ -1,41 +1,27 @@
 ﻿import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
 import { getUserMessages } from "@/services/messages/get-user-messages";
 import { createFeedback } from "@/services/feedback/create-feedback";
-import { scrollIntoView } from "@/base/utils/scroll-into-view";
 import { socketService } from "@/services/socketService";
 import { ChatWindow } from "./components/ChatWindow";
 import { ChatHeader } from "./components/ChatHeader";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { ChatInput } from "./components/ChatInput";
 import { to } from "@/base/utils/to";
 import "./styles.scss";
 import { AIModel } from "@shared/types/global";
+import { useSocketConnection } from "@/base/hooks/use-socket-connection";
 
 export function DualChatPage() {
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isTypingGemini, setIsTypingGemini] = useState(false);
-  const messagesEndRefGemini = useRef<HTMLDivElement>(null);
-  const messagesEndRefGPT = useRef<HTMLDivElement>(null);
   const [isTypingGPT, setIsTypingGPT] = useState(false);
   const [messages, setMessages] = useState<any[]>([]);
   const [inputText, setInputText] = useState("");
 
+  useSocketConnection();
+
   useEffect(() => {
     loadUserMessages();
-
-    socketService().connect();
-
-    socketService().onConnect(() => {
-      console.log("Socket connected");
-    });
-
-    socketService().onDisconnect(() => {
-      console.log("Socket disconnected");
-    });
-
-    return () => {
-      socketService().disconnect();
-    };
   }, []);
 
   const loadUserMessages = async () => {
@@ -43,10 +29,10 @@ export function DualChatPage() {
 
     if (!result.ok) {
       console.error("Error loading messages:", result.error);
-      return;
+    } else {
+      setMessages(result.data.data);
     }
 
-    setMessages(result.data.data);
     setIsLoadingMessages(false);
   };
 
@@ -58,13 +44,6 @@ export function DualChatPage() {
       return;
     }
   };
-
-  useEffect(() => {
-    if (!isLoadingMessages) {
-      scrollIntoView(messagesEndRefGPT);
-      scrollIntoView(messagesEndRefGemini);
-    }
-  }, [messages.length, isLoadingMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +58,6 @@ export function DualChatPage() {
 
     const result = await to(async () => {
       socketService().sendMessage(messageText, (data) => {
-        console.log("onAck", data);
-
         const userMessage =
           data.messageWithLLMResponses as MessageWithLLMResponsesDTO;
 
@@ -105,7 +82,6 @@ export function DualChatPage() {
           chatType={AIModel.GPT_4O_MINI}
           title="GPT-4o-mini"
           isTyping={isTypingGPT}
-          messagesEndRef={messagesEndRefGPT}
           messages={messages}
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}
@@ -115,7 +91,6 @@ export function DualChatPage() {
           chatType={AIModel.GEMINI_1_5_FLASH}
           title="Gemini 1.5-flash"
           isTyping={isTypingGemini}
-          messagesEndRef={messagesEndRefGemini}
           messages={messages}
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}

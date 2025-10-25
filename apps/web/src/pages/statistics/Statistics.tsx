@@ -41,11 +41,10 @@ export function StatisticsPage() {
 
     if (!result.ok) {
       setError(String(result.error) || "Failed to load statistics");
-      setLoading(false);
-      return;
+    } else {
+      setStatistics(result.data.data);
     }
 
-    setStatistics(result.data.data);
     setLoading(false);
   };
 
@@ -64,10 +63,10 @@ export function StatisticsPage() {
   }
 
   return (
-    <div className={styles.statisticsPage}>
-      <div className={styles.statisticsContainer}>
-        <div className={styles.headerSection}>
-          <button onClick={handleBackClick} className={styles.backButton}>
+    <div className={styles["statistics-page"]}>
+      <div className={styles["statistics-container"]}>
+        <div className={styles["header-section"]}>
+          <button onClick={handleBackClick} className={styles["back-button"]}>
             Back to Chat
           </button>
 
@@ -75,11 +74,11 @@ export function StatisticsPage() {
         </div>
 
         {statistics && (
-          <div className={styles.statisticsContent}>
-            <div className={styles.chartSection}>
+          <div className={styles["statistics-content"]}>
+            <div className={styles["chart-section"]}>
               <h2>Model Preference Distribution</h2>
 
-              <div className={styles.chartContainer}>
+              <div className={styles["chart-container"]}>
                 <ResponsiveContainer width="100%" height={400}>
                   <PieChart>
                     <Pie
@@ -117,7 +116,7 @@ export function StatisticsPage() {
             />
 
             {statistics.totalFeedback === 0 && (
-              <div className={styles.noDataSection}>
+              <div className={styles["no-data-section"]}>
                 <h2>No Data Available</h2>
 
                 <p>

@@ -1,3 +1,5 @@
+import styles from "../styles.module.scss";
+
 interface Props {
   gptLikes: number;
   geminiLikes: number;
@@ -21,15 +23,15 @@ export function Cards({ gptLikes, geminiLikes, totalFeedback }: Props) {
   ];
 
   return (
-    <div className="summary-section">
+    <div className={styles["summary-section"]}>
       <h2>Summary</h2>
 
-      <div className="summary-cards">
+      <div className={styles["summary-cards"]}>
         {data.map((item) => (
-          <div className="summary-card gpt-card">
+          <div className={styles["summary-card gpt-card"]}>
             <h3>{item.name}</h3>
-            <div className="count">{item.value}</div>
-            <div className="label">Likes</div>
+            <div className={styles["count"]}>{item.value}</div>
+            <div className={styles["label"]}>Likes</div>
           </div>
         ))}
       </div>

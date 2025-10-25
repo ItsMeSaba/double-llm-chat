@@ -1,3 +1,5 @@
+import styles from "../styles.module.scss";
+
 interface Props {
   onRetry: () => void;
   onBack: () => void;
@@ -6,17 +8,17 @@ interface Props {
 
 export function Error({ onRetry, onBack, error }: Props) {
   return (
-    <div className="statistics-page">
-      <div className="statistics-container">
-        <div className="header-section">
-          <button onClick={onBack} className="back-button">
+    <div className={styles["statistics-page"]}>
+      <div className={styles["statistics-container"]}>
+        <div className={styles["header-section"]}>
+          <button onClick={onBack} className={styles["back-button"]}>
             Back to Chat
           </button>
           <h1>Statistics Dashboard</h1>
         </div>
-        <div className="error-container">
-          <p className="error-message">{error}</p>
-          <button onClick={onRetry} className="retry-button">
+        <div className={styles["error-container"]}>
+          <p className={styles["error-message"]}>{error}</p>
+          <button onClick={onRetry} className={styles["retry-button"]}>
             Try Again
           </button>
         </div>

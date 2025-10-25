@@ -1,7 +1,10 @@
-﻿import React from "react";
+﻿"use client";
+
+import React, { useEffect, useRef } from "react";
 
 import { TypingIndicator } from "@/components/modules/typing-indicator/TypingIndicator";
 import type { MessageWithLLMResponsesDTO } from "@shared/dtos/messages";
+import { scrollIntoView } from "@/base/utils/scroll-into-view";
 import type { AIModel } from "@shared/types/global";
 import { Message } from "./Message";
 
@@ -25,7 +28,6 @@ interface ChatWindowProps {
   chatType: AIModel;
   title: string;
   isTyping: boolean;
-  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   messages: MessageWithLLMResponsesDTO[];
   isLoadingMessages: boolean;
   onFeedback: (messageId: number, winnerModel: AIModel) => void;
@@ -35,15 +37,21 @@ export function ChatWindow({
   chatType,
   title,
   isTyping,
-  messagesEndRef,
   messages,
   isLoadingMessages,
   onFeedback,
 }: ChatWindowProps) {
-  console.log("messages", chatType, messages);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
   const getAiResponse = (message: MessageWithLLMResponsesDTO) => {
     return message?.responses?.find((response) => response.model === chatType);
   };
+
+  useEffect(() => {
+    if (!isLoadingMessages) {
+      scrollIntoView(messagesEndRef);
+    }
+  }, [messages.length, isLoadingMessages]);
 
   return (
     <div className="chat-window">
@@ -78,7 +86,7 @@ export function ChatWindow({
                 {aiResponse && (
                   <Message
                     message={{
-                      id: aiResponse.id,
+                      id: message.id,
                       content: aiResponse.content,
                       createdAt: message.createdAt,
                       isLiked: message.feedback?.winnerModel === chatType,

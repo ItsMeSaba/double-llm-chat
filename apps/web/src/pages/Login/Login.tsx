@@ -1,3 +1,4 @@
+import { getButtonLabel } from "./helpers/get-button-label";
 import { useAuth } from "../../base/context/AuthProvider";
 import { validateForm } from "./helpers/validate-form";
 import { login, register } from "../../services/auth";
@@ -157,13 +158,7 @@ export function LoginPage() {
           )}
 
           <button type="submit" className="submit-btn" disabled={isLoading}>
-            {isLoading
-              ? isLogin
-                ? "Signing In..."
-                : "Creating Account..."
-              : isLogin
-                ? "Sign In"
-                : "Sign Up"}
+            {getButtonLabel(isLogin, isLoading)}
           </button>
         </form>
 
