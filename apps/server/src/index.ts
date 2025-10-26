@@ -1,25 +1,24 @@
-import express from "express";
+import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
-import { createServer } from "http";
-import { setupRoutes } from "./routes";
-import { errorHandler } from "./middleware/errorHandler";
+import express from "express";
+import cors from "cors";
+
 import { notFoundHandler } from "./middleware/notFoundHandler";
+import { errorHandler } from "./middleware/errorHandler";
+import { SocketService } from "./services/socketService";
 import { authMiddleware } from "./middleware/auth";
 import { corsOptions } from "./config/cors";
-import cors from "cors";
-import { SocketService } from "./services/socketService";
+import { setupRoutes } from "./routes";
+import { createServer } from "http";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const server = createServer(app);
 const PORT = process.env.PORT || 3000;
 
-// Initialize middleware
 function initializeMiddleware(): void {
   app.use(helmet());
   app.use(cors(corsOptions));
@@ -30,24 +29,20 @@ function initializeMiddleware(): void {
   app.use(authMiddleware);
 }
 
-// Initialize routes
 function initializeRoutes(): void {
   setupRoutes(app);
 }
 
-// Initialize Socket.IO
 function initializeSocketIO(): void {
   new SocketService(server);
   console.log("🔌 Socket.IO service initialized");
 }
 
-// Initialize error handling
 function initializeErrorHandling(): void {
   app.use(notFoundHandler);
   app.use(errorHandler);
 }
 
-// Start the server
 function startServer(): void {
   server.listen(PORT, () => {
     console.log(`🚀 Server is running on port ${PORT}`);
@@ -55,7 +50,6 @@ function startServer(): void {
   });
 }
 
-// Main function to bootstrap the server
 function bootstrap(): void {
   initializeMiddleware();
   initializeRoutes();
@@ -64,7 +58,6 @@ function bootstrap(): void {
   startServer();
 }
 
-// Start the application
 bootstrap();
 
 export default app;
