@@ -1,8 +1,8 @@
 import cookieParser from "cookie-parser";
+import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import express from "express";
 import cors from "cors";
 
 import { notFoundHandler } from "./middleware/notFoundHandler";
