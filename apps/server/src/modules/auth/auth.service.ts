@@ -1,13 +1,15 @@
-import { db } from "../../db";
-import { eq } from "drizzle-orm";
-import { users } from "../../db/schema";
-import { doesUserExist } from "../../base/helpers/auth/does-user-exist";
-import { getHashedPassword } from "../../base/helpers/auth/get-hashed-password";
-import { generateAccessToken } from "../../base/helpers/auth/generate-access-token";
 import {
+  createAccessToken,
+  verifyRefreshToken,
   generateRefreshToken,
   storeRefreshTokenInDB,
+  isRefreshTokenActive,
 } from "../../base/helpers/auth";
+import { getHashedPassword } from "../../base/helpers/auth/get-hashed-password";
+import { doesUserExist } from "../../base/helpers/auth/does-user-exist";
+import { users } from "../../db/schema";
+import { eq } from "drizzle-orm";
+import { db } from "../../db";
 
 import bcrypt from "bcryptjs";
 
@@ -33,7 +35,7 @@ export const login = async (email: string, password: string) => {
     return { status: 401, data: { error: "Invalid email or password" } };
   }
 
-  const accessToken = generateAccessToken({
+  const accessToken = createAccessToken({
     email: userRecord.email,
     userId: String(userRecord.id),
   });
@@ -80,7 +82,7 @@ export const register = async (
       .insert(users)
       .values({ email, passwordHash: hashedPassword })
       .returning();
-    const accessToken = generateAccessToken({
+    const accessToken = createAccessToken({
       email,
       userId: String(newUser[0].id),
     });
@@ -97,5 +99,44 @@ export const register = async (
     return { status: 201, data: { accessToken } };
   } catch (error) {
     return { status: 500, data: { error: "Error creating user" } };
+  }
+};
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  try {
+    const payload = verifyRefreshToken(refreshToken);
+
+    if (!payload) {
+      return { status: 403, data: { error: "Invalid refresh token" } };
+    }
+
+    const tokenCheck = await isRefreshTokenActive(refreshToken);
+
+    if (!tokenCheck.isActive) {
+      return { status: 403, data: { error: "Refresh token is not active" } };
+    }
+
+    const newAccessToken = createAccessToken({
+      email: payload.email,
+      userId: payload.userId,
+    });
+
+    const newRefreshToken = generateRefreshToken({
+      email: payload.email,
+      userId: payload.userId,
+    });
+
+    await storeRefreshTokenInDB({
+      userId: payload.userId,
+      token: newRefreshToken!,
+      keepFamilyId: true,
+    });
+
+    return {
+      status: 200,
+      data: { accessToken: newAccessToken },
+    };
+  } catch (error) {
+    return { status: 500, data: { error: "Could not refresh token" } };
   }
 };

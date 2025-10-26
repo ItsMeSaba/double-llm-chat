@@ -1,7 +1,7 @@
 // Placeholder content for authentication controller
 
 import { Request, Response } from "express";
-import { login, register } from "./auth.service";
+import { login, register, refreshAccessToken } from "./auth.service";
 
 export const loginUser = async (req: Request, res: Response) => {
   try {
@@ -27,6 +27,22 @@ export const registerUser = async (req: Request, res: Response) => {
     return res.status(result.status).json(result.data);
   } catch (error) {
     console.error("Error during registration:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const refreshToken = async (req: Request, res: Response) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({ error: "No refresh token provided" });
+    }
+
+    const result = await refreshAccessToken(refreshToken);
+    return res.status(result.status).json(result.data);
+  } catch (error) {
+    console.error("Error refreshing token:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
