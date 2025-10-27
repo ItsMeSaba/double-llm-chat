@@ -1,101 +1,54 @@
-> ℹ️ **Authentication and socket security details:**  
-> For comprehensive information about authentication flows, token management, and socket security, please refer to:
->
-> - [`apps/server/AUTH.md`](apps/server/AUTH.md)
-> - [`apps/server/SOCKET_SECURITY.md`](apps/server/SOCKET_SECURITY.md)
+# Project Overview
 
-# 🚀 Project Setup & Run Guide
+This project is a modern web application built using a monorepo structure, featuring both a frontend and a backend application.
 
-This project is organized as a **monorepo** with two applications:
+## Tech Stack
 
-- **Frontend (React + Vite)** → `apps/web`
-- **Backend (Express + SQLite + Drizzle)** → `apps/server`
+- **Frontend**: React with Vite
+- **Backend**: Express.js with SQLite and Drizzle ORM
+- **Authentication**: JWT and refresh tokens
+- **Real-time Communication**: Socket.io for live chat messages
 
----
+## Key Features
 
-## 📦 Installation
+1. **Authentication**:
+   - Secure user login and registration using JWT.
+   - Refresh token mechanism for session management.
 
-Clone the repo and install dependencies:
+2. **Chat Functionality**:
+   - Real-time messaging with live updates using Socket.io.
+   - Integration with AI models for generating responses.
 
-```bash
-git clone <your-repo-url>
-cd <your-repo-name>
-yarn install
-```
+3. **Feedback System**:
+   - Users can provide feedback on AI model responses.
+   - Feedback statistics are available for analysis.
 
-> All dependencies for both frontend and backend are installed from the root using Yarn workspaces.
+4. **Statistics Dashboard**:
+   - Visual representation of feedback data.
+   - Summary of user interactions with AI models.
 
----
+5. **Responsive Design**:
+   - Optimized for both desktop and mobile devices.
 
-## ▶️ Running the Apps
+## Installation and Setup
 
-You can run **each app separately** from its own folder, or run them via **root-level scripts**.
+1. **Clone the Repository**:
 
-### 1. From app folders
+   ```bash
+   git clone <your-repo-url>
+   cd <your-repo-name>
+   yarn install
+   ```
 
-**Frontend (Vite dev server at http://localhost:5173):**
+2. **Running the Applications**:
+   - **Frontend**: `yarn dev:web`
+   - **Backend**: `yarn dev:server`
 
-```bash
-cd apps/web
-yarn dev
-```
+3. **Environment Variables**:
+   - Configure `.env` files for both frontend and backend applications.
 
-**Backend (Express API at http://localhost:3000):**
+## Additional Information
 
-```bash
-cd apps/server
-yarn dev
-```
-
-### 2. From the root
-
-**Frontend only:**
-
-```bash
-yarn dev:web
-```
-
-**Backend only:**
-
-```bash
-yarn dev:server
-```
-
-**Run both in two terminals** (one for web, one for server).
-
----
-
-## ⚙️ Environment Variables
-
-Each app has its own `.env` file. Example setup:
-
-### `apps/server/.env`
-
-```bash
-OPENAI_API_KEY=XXX
-GOOGLE_GEMINI_API_KEY=XXX
-JWT_SECRET=XXX
-```
-
-### `apps/web/.env`
-
-```bash
-VITE_SERVER_URL=http://localhost:3000/api
-```
-
-From inside each app:
-
-```bash
-yarn dev       # start the app
-yarn build     # production build
-yarn lint      # linting
-```
-
----
-
-## ✅ Notes
-
-- Make sure you have **Node.js (>=18)** and **Yarn (Berry/modern)** installed.
-- The backend uses **SQLite** — no external DB server setup is required.
-- Frontend and backend communicate via **JWT + refresh tokens** for authentication.
-- WebSockets (`socket.io`) are used for live chat messages.
+- **Node.js**: Ensure Node.js (>=18) is installed.
+- **Yarn**: Uses Yarn workspaces for dependency management.
+- **Database**: SQLite is used for simplicity and ease of setup.
