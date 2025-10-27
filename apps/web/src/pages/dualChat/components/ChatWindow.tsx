@@ -32,6 +32,7 @@ interface ChatWindowProps {
   isLoadingMessages: boolean;
   onFeedback: (messageId: number, winnerModel: AIModel) => void;
   temporaryMessage: string;
+  newFeedbacks: number[];
 }
 
 export function ChatWindow({
@@ -42,6 +43,7 @@ export function ChatWindow({
   isLoadingMessages,
   onFeedback,
   temporaryMessage,
+  newFeedbacks,
 }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -91,7 +93,9 @@ export function ChatWindow({
                       id: message.id,
                       content: aiResponse.content,
                       createdAt: message.createdAt,
-                      isLiked: message.feedback?.winnerModel === chatType,
+                      isLiked:
+                        message.feedback?.winnerModel === chatType ||
+                        newFeedbacks.includes(message.id),
                     }}
                     sender={chatType}
                     onFeedback={onFeedback}

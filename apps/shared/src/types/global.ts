@@ -8,3 +8,8 @@ export type LLMResponse = {
   content: string;
   id: number;
 };
+
+export interface Feedback {
+  id: number;
+  winnerModel: AIModel;
+}

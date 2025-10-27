@@ -21,6 +21,10 @@ export function DualChatPage() {
     loading: isLoadingMessages,
     setMessages,
   } = useUserMessages();
+  const [newFeedbacks, setNewFeedbacks] = useState<Record<AIModel, number[]>>({
+    [AIModel.GPT_4O_MINI]: [],
+    [AIModel.GEMINI_1_5_FLASH]: [],
+  });
 
   useSocketConnection();
 
@@ -31,6 +35,11 @@ export function DualChatPage() {
       console.error("Error submitting feedback:", result.error);
       return;
     }
+
+    setNewFeedbacks((prev) => ({
+      ...prev,
+      [winnerModel]: [...prev[winnerModel], messageId],
+    }));
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -77,6 +86,7 @@ export function DualChatPage() {
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}
           temporaryMessage={temporaryMessage}
+          newFeedbacks={newFeedbacks[AIModel.GPT_4O_MINI]}
         />
 
         <ChatWindow
@@ -87,6 +97,7 @@ export function DualChatPage() {
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}
           temporaryMessage={temporaryMessage}
+          newFeedbacks={newFeedbacks[AIModel.GEMINI_1_5_FLASH]}
         />
       </div>
 

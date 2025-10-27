@@ -1,4 +1,4 @@
-import type { AIModel } from "@shared/types/global";
+import type { AIModel, Feedback } from "@shared/types/global";
 import { http } from "../http";
 
 export interface FeedbackRequest {
@@ -9,10 +9,7 @@ export interface FeedbackRequest {
 export interface FeedbackResponse {
   success: boolean;
   message: string;
-  data: {
-    messageId: number;
-    winnerModel: string;
-  };
+  data: Feedback;
 }
 
 export async function createFeedback(
