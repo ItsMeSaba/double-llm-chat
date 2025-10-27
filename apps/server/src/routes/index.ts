@@ -1,11 +1,13 @@
 import { messagesRoutes } from "@/modules/messages/messages.routes";
 import { authRoutes } from "@/modules/auth/auth.routes";
 import { Express } from "express";
+import { feedbackRoutes } from "@/modules/feedback/feedback.routes";
 // import { chatRoutes } from "./chat";
 
 export function setupRoutes(app: Express): void {
   app.use("/api/auth", authRoutes);
   app.use("/api/chat", messagesRoutes);
+  app.use("/api/chat", feedbackRoutes);
 
   app.get("/", (_req, res) => {
     res.json({
