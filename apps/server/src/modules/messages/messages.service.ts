@@ -1,16 +1,16 @@
 import {
-  fetchMessages as fetchMessagesFromRepo,
+  fetchMessagesWithDetails,
   insertMessage as insertMessageToRepo,
 } from "./messages.repo";
 
-export const fetchMessages = async (userId: number) => {
-  return await fetchMessagesFromRepo(userId);
+export const fetchMessages = async (chatId: number) => {
+  return await fetchMessagesWithDetails(chatId);
 };
 
 export const insertMessage = async (
-  userId: number,
+  chatId: number,
   sender: string,
   content: string
 ) => {
-  return await insertMessageToRepo(userId, sender, content);
+  return await insertMessageToRepo(chatId, sender, content);
 };
