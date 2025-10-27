@@ -12,6 +12,7 @@ import { AIModel } from "@shared/types/global";
 import { useSocketConnection } from "@/base/hooks/use-socket-connection";
 
 export function DualChatPage() {
+  const [temporaryMessage, setTemporaryMessage] = useState<string>("");
   const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [isTypingGemini, setIsTypingGemini] = useState(false);
   const [isTypingGPT, setIsTypingGPT] = useState(false);
@@ -56,12 +57,15 @@ export function DualChatPage() {
     setIsTypingGPT(true);
     setIsTypingGemini(true);
 
+    setTemporaryMessage(messageText);
+
     const result = await to(async () => {
       socketService().sendMessage(messageText, (data) => {
         const userMessage =
           data.messageWithLLMResponses as MessageWithLLMResponsesDTO;
 
         setMessages((prev) => [...prev, userMessage]);
+        setTemporaryMessage("");
       });
     });
 
@@ -85,6 +89,7 @@ export function DualChatPage() {
           messages={messages}
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}
+          temporaryMessage={temporaryMessage}
         />
 
         <ChatWindow
@@ -94,6 +99,7 @@ export function DualChatPage() {
           messages={messages}
           isLoadingMessages={isLoadingMessages}
           onFeedback={handleFeedback}
+          temporaryMessage={temporaryMessage}
         />
       </div>
 

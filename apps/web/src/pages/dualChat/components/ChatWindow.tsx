@@ -31,6 +31,7 @@ interface ChatWindowProps {
   messages: MessageWithLLMResponsesDTO[];
   isLoadingMessages: boolean;
   onFeedback: (messageId: number, winnerModel: AIModel) => void;
+  temporaryMessage: string;
 }
 
 export function ChatWindow({
@@ -40,6 +41,7 @@ export function ChatWindow({
   messages,
   isLoadingMessages,
   onFeedback,
+  temporaryMessage,
 }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +53,7 @@ export function ChatWindow({
     if (!isLoadingMessages) {
       scrollIntoView(messagesEndRef);
     }
-  }, [messages.length, isLoadingMessages]);
+  }, [messages.length, isLoadingMessages, temporaryMessage]);
 
   return (
     <div className="chat-window">
@@ -98,6 +100,23 @@ export function ChatWindow({
               </React.Fragment>
             );
           })}
+
+        {temporaryMessage && (
+          <Message
+            message={
+              {
+                id: Date.now(),
+                content: temporaryMessage,
+                createdAt: new Date(),
+                responses: [],
+                feedback: null,
+                sender: "user",
+              } as MessageWithLLMResponsesDTO
+            }
+            sender="user"
+            onFeedback={onFeedback}
+          />
+        )}
 
         {!isLoadingMessages && isTyping && <TypingIndicator />}
 
