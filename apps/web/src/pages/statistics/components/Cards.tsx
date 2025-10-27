@@ -13,7 +13,7 @@ export function Cards({ gptLikes, geminiLikes, totalFeedback }: Props) {
       value: gptLikes,
     },
     {
-      name: "Gemini 1.5 Flash",
+      name: "Gemini 2.0 Flash",
       value: geminiLikes,
     },
     {
@@ -22,14 +22,17 @@ export function Cards({ gptLikes, geminiLikes, totalFeedback }: Props) {
     },
   ];
 
+  console.log("data", data);
+
   return (
     <div className={styles["summary-section"]}>
       <h2>Summary</h2>
 
       <div className={styles["summary-cards"]}>
         {data.map((item) => (
-          <div className={styles["summary-card gpt-card"]}>
+          <div className={`${styles["summary-card"]} ${styles["gpt-card"]}`}>
             <h3>{item.name}</h3>
+            <p>yooo</p>
             <div className={styles["count"]}>{item.value}</div>
             <div className={styles["label"]}>Likes</div>
           </div>

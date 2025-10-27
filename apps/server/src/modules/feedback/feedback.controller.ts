@@ -2,6 +2,7 @@ import {
   insertFeedback,
   updateFeedback,
   fetchFeedback,
+  getFeedbackStats,
 } from "./feedback.service";
 import { Request, Response } from "express";
 import { to } from "@shared/utils/to";
@@ -45,5 +46,15 @@ export const getFeedbackStatistics = async (req: Request, res: Response) => {
     return res.status(401).json({ error: "User not authenticated" });
   }
 
-  return res.status(200).json({ success: true, data: {} }); // Placeholder for actual data
+  const userId = parseInt(user.userId);
+
+  const feedbackStats = await getFeedbackStats(userId);
+
+  if (!feedbackStats) {
+    return res
+      .status(500)
+      .json({ error: "Failed to retrieve feedback statistics" });
+  }
+
+  return res.status(200).json({ success: true, data: feedbackStats });
 };
