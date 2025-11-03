@@ -10,7 +10,7 @@ import { errorHandler } from "./middleware/errorHandler";
 import { SocketService } from "./services/socketService";
 import { authMiddleware } from "./middleware/auth";
 import { corsOptions } from "./config/cors";
-import { setupRoutes } from "./routes";
+import { setupRoutes } from "./routes-deprecated";
 import { createServer } from "http";
 
 dotenv.config();

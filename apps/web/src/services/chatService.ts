@@ -1,4 +1,4 @@
-import { AIModel } from "../types/global";
+import { AIModel } from "@shared/types/global";
 
 export interface ModelResponse {
   id: number;
